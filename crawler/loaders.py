@@ -10,13 +10,12 @@ class Tab(Enum):
     Channels = 'channels'
     HomePage = 'featured'
     Videos = 'videos'
-    Community = 'community'
+    Community = 'community'  # TODO: Not implemented
     About = 'about'
 
 
-class Loader:
+class BaseLoader:
     def __init__(self):
-        self._base_url = 'https://www.youtube.com/'
         user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
         accept_lang = 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7'
         cookie = 'VISITOR_INFO1_LIVE=t3zCqZs-6NA; _ga=GA1.2.1862333059.1547989835; _gid=GA1.2.366404146.1547989835; PREF=f5=30&al=en&cvdm=list&f1=50000000; YSC=KCsXvfHQG-I; GPS=1'
@@ -25,27 +24,47 @@ class Loader:
             'accept-language': accept_lang,
             'cookie': cookie,
         }
-        self._query_string = {}
-        self.data_config = 'window["ytInitialData"] = '
-        self.player_config = 'window["ytInitialPlayerResponse"] = (\n        '
 
-    def reload_page(self, next_page_token):
+    def __get_resp_text(self, url, params=None, headers=None, method='GET'):
+        try:
+            params = {} if params is None else params
+            headers = self._headers if headers is None else headers
+            resp = requests.request(method, url, headers=headers, params=params)
+        except Exception as e:
+            raise utils.RequestError("Connection is failed", e)
+        utils.check_resp(resp)
+        return resp.text
+
+
+class Reloader(BaseLoader):
+    def __init__(self):
+        super().__init__()
+        self._base_url = 'https://www.youtube.com/browse_ajax/'
+
+    def load(self, next_page_token):
         headers = deepcopy(self._headers)
+        query_params = {
+            'ctoken': next_page_token['ctoken'],
+            'continuation': next_page_token['ctoken'],
+            'itct': next_page_token['itct'],
+        }
 
-        url_mask = self._base_url + 'browse_ajax?ctoken=%s&continuation=%s&itct=%s'
-        ctoken = next_page_token['ctoken']
-        continuation = next_page_token['ctoken']
-        itct = next_page_token['itct']
-        url = url_mask % (ctoken, continuation, itct)
-
-        config = self.__get_resp_text(url, headers=headers)
+        config = self.__get_resp_text(self._base_url, headers=headers, params=query_params)
         try:
             return json.loads(config)
         except Exception as e:
             raise utils.JsonSerializableError("Reload page config serialize is failed", e)
 
-    def load_page(self, channel_id, tab=Tab.HomePage):
-        text = self.__get_resp_text(self._base_url + 'channel/' + channel_id + '/' + tab.value)
+
+class Loader(BaseLoader):
+    def __init__(self):
+        super().__init__()
+        self._base_url = 'https://www.youtube.com/channel/'
+        self.data_config = 'window["ytInitialData"] = '
+        self.player_config = 'window["ytInitialPlayerResponse"] = (\n        '
+
+    def load(self, channel_id, tab=Tab.HomePage):
+        text = self.__get_resp_text(self._base_url + channel_id + '/' + tab.value)
 
         player_config = self.__get_player_config(text)
         data_config = self.__get_data_config(text)
@@ -75,15 +94,3 @@ class Loader:
             return json.loads(config)
         except Exception as e:
             raise utils.JsonSerializableError("Player config serialize is failed", e)
-
-    def __get_resp_text(self, url, params=None, headers=None, method='GET'):
-        try:
-            params = self._query_string if params is None else params
-            headers = self._headers if headers is None else headers
-            resp = requests.request(method, url, headers=headers, params=params)
-        except Exception as e:
-            raise utils.RequestError("Connection is failed", e)
-        utils.check_resp(resp)
-        return resp.text
-
-

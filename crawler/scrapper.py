@@ -1,5 +1,5 @@
 from crawler import parsers
-from crawler.loaders import Loader
+from crawler.loaders import Loader, Reloader
 
 
 class Scrapper:
@@ -16,10 +16,11 @@ class Scrapper:
             * about
         If you want to add new pages, you should be add new constants int crawler.loaders.Tab
     """
-    def __init__(self, loader, parsers=None, logger=None, channel_descr_dumper=None, hard=True, channel_filter=None):
+    def __init__(self, loader, reloader, parsers=None, logger=None, channel_descr_dumper=None, hard=True, channel_filter=None):
         self._hard = hard
 
         self._parsers = parsers if parsers is not None else []
+        self._reloader = reloader
         self._loader = loader
         self._channel_descr_dumper = channel_descr_dumper
         self._channel_filter = channel_filter
@@ -29,9 +30,9 @@ class Scrapper:
     def _reload_pages(self, p, next_page_token):
         channel_descr = []
         count_pages = 1
-        while count_pages < p.max_page_token and len(next_page_token) != 0:
+        while (p.max_page is None or count_pages < p.max_page) and len(next_page_token) != 0:
             count_pages += 1
-            player_config, data_config = self._loader.reload_page(next_page_token)
+            player_config, data_config = self._reloader.load(next_page_token)
             descr, next_page_token = p.reload_parse(player_config, data_config)
             channel_descr.append(descr)
         return channel_descr
@@ -43,7 +44,7 @@ class Scrapper:
     def parse(self, channel_id):
         channel_descr = {}
         for p in self._parsers:
-            player_config, data_config = self._loader.load_page(channel_id, p.tab)
+            player_config, data_config = self._loader.load(channel_id, p.tab)
             descr, next_page_token = p.parse(player_config, data_config)
             channel_descr[p.tab] = [descr] + self._reload_pages(p, next_page_token)
 
@@ -54,10 +55,14 @@ class Scrapper:
 
 
 channel_id = 'UCSoYSTOt1g_Vdo8xCJeQpHw'
-l = Loader()
-Scrapper(l, [
-    parsers.HomePageParser(),
-    parsers.VideosParser(),
-    parsers.ChannelsParser(),
-    parsers.AboutParser(),
-]).parse(channel_id)
+loader = Loader()
+reloader = Reloader()
+Scrapper(
+    loader, reloader,
+    [
+        parsers.HomePageParser(),
+        parsers.VideosParser(),
+        parsers.ChannelsParser(),
+        parsers.AboutParser(),
+    ]
+).parse(channel_id)
