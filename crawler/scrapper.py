@@ -35,7 +35,7 @@ class Scrapper:
             channel_descr.append(descr)
             if count_pages >= p.max_page_token or len(next_page_token) == 0:
                 break
-            player_config, data_config = self._loader.reload_page(next_page_token, p.tab)
+            player_config, data_config = self._loader.reload_page(next_page_token)
         return channel_descr
 
     def _dump(self, descr):

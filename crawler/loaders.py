@@ -28,6 +28,9 @@ class Loader:
         self.data_config = 'window["ytInitialData"] = '
         self.player_config = 'window["ytInitialPlayerResponse"] = (\n        '
 
+    def reload_page(self, next_page_token):
+        pass
+
     def load_page(self, channel_id, tab=Tab.HomePage):
         text = self.__get_resp_text(self._base_url + channel_id + '/' + tab.value)
 
