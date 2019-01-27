@@ -3,9 +3,10 @@
 		"channel_id": .header.c4TabbedHeaderRenderer.channelId, 
 		"title": .header.c4TabbedHeaderRenderer.title, 
 		"verified":  .header.c4TabbedHeaderRenderer | has("badges"),
+		"count_subscribers": .header.c4TabbedHeaderRenderer.subscriberCountText.simpleText,
 		"tags": [.microformat.microformatDataRenderer.tags[]?]
 	}, 
-	"videos": .contents.twoColumnBrowseResultsRenderer.tabs[0].tabRenderer.content.sectionListRenderer | {
+	"videos": .contents.twoColumnBrowseResultsRenderer.tabs[]? | select(.tabRenderer.selected == true) | .tabRenderer.content.sectionListRenderer | {
  		"others": [
 			.contents[1:]? | .[]?.itemSectionRenderer.contents[]?.shelfRenderer | { 
 				"title": .title.runs[0].text,  			

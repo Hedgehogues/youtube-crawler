@@ -1,4 +1,4 @@
-.contents.twoColumnBrowseResultsRenderer.tabs[4].tabRenderer.content.sectionListRenderer | {
+.contents.twoColumnBrowseResultsRenderer.tabs[]? | select(.tabRenderer.selected == true) | .tabRenderer.content.sectionListRenderer | {
 	"channels": .contents | [
 		.[]?.itemSectionRenderer.contents[]?.gridRenderer.items[]?.gridChannelRenderer | {
 			"verified": has("ownerBadges"), 
@@ -14,5 +14,8 @@
 			"url": .endpoint.commandMetadata.webCommandMetadata.url
 		}
 	],
-	"page_loader": .contents[0].itemSectionRenderer.contents[0].gridRenderer.continuations[0].nextContinuationData
+	"next_page_token": .contents[0].itemSectionRenderer.contents[0].gridRenderer.continuations[0].nextContinuationData | {
+		"ctoken": .continuation,
+		"itct":  .clickTrackingParams
+	},
 }

@@ -18,57 +18,68 @@ class BaseParser:
         self.max_page = max_page
         self.tab = tab
         with open(jq_path) as fd_fq:
-            self._jq = jq(fd_fq.read())
+            self._jq_load = jq(fd_fq.read())
 
-        self._next_page_token = {
-            'ctoken': '',
-            'itct': '',
-        }
+    def _parse(self, player_config, data_config):
+        data = self._jq_load.transform(data_config)
+        return [data], None
 
     def parse(self, player_config, data_config):
-        data = self._jq.transform(data_config)
-        return data, self._next_page_token
+        return self._parse(player_config, data_config)
 
 
-class VideosParser(BaseParser):
-    def __init__(self, max_page=None, jq_path='jq/videos.jq'):
+class ReloaderParser(BaseParser):
+    def __init__(self, tab, max_page, data_key, jq_load_path, jq_reload_path):
+        super().__init__(tab, max_page, jq_load_path)
+
+        with open(jq_reload_path) as fd_fq:
+            self._jq_reload = jq(fd_fq.read())
+        self._next_page_token = None
+        self._data_key = data_key
+
+    def _parse(self, player_config, data_config):
+        data = self._jq_load.transform(data_config)
+        itct = data['next_page_token']['itct']
+        next_page_descr = data['next_page_token']['ctoken']
+        if next_page_descr is not None and itct is not None:
+            return data[self._data_key], {
+                'ctoken': next_page_descr,
+                'itct':  itct,
+            }
+        return [data[self._data_key]], None
+
+    def parse(self, player_config, data_config):
+        return self._parse(player_config, data_config)
+
+    def _reload_parse(self, data_config):
+        data = self._jq_reload.transform(data_config)
+        itct = data['next_page_token']['itct']
+        next_page_descr = data['next_page_token']['ctoken']
+        if next_page_descr is not None and itct is not None:
+            return data[self._data_key], {
+                'ctoken': next_page_descr,
+                'itct':  itct,
+            }
+        return data[self._data_key], None
+
+    def reload_parse(self, data_config):
+        return self._reload_parse(data_config)
+
+
+class VideosParser(ReloaderParser):
+    def __init__(self, max_page=None, jq_load_path='jq/videos.jq', jq_reload_path='jq/videos_reload.jq'):
+        super().__init__(Tab.Videos, max_page, 'videos', jq_load_path, jq_reload_path)
         self.max_page = max_page
-        super().__init__(Tab.Videos, max_page, jq_path)
 
-    def parse(self, player_config, data_config):
-        data = self._jq.transform(data_config)
-        itct = data['page_loader']['itct']
-        next_page_descr = data['page_loader']['ctoken']
-        next_page_descr = {
-            'ctoken': '' if next_page_descr is None else next_page_descr,
-            'itct': '' if itct is None else itct,
-        }
-        return data['owner_videos'], next_page_descr
+
+class ChannelsParser(ReloaderParser):
+    def __init__(self, max_page=None, jq_load_path='jq/channels.jq', jq_reload_path='jq/channels_reload.jq'):
+        super().__init__(Tab.Channels, max_page, 'channels', jq_load_path, jq_reload_path)
 
 
 class AboutParser(BaseParser):
     def __init__(self, jq_path='jq/about.jq'):
         super().__init__(Tab.About, 1, jq_path)
-
-
-class CommunityParser(BaseParser):
-    def __init__(self, max_page=None, jq_path='jq/videos'):
-        super().__init__(Tab.Community, max_page, jq_path)
-
-    def parse(self, player_config, data_config):
-        data = self._jq.transform(data_config)
-        c_token = data
-        return data, c_token
-
-
-class ChannelsParser(BaseParser):
-    def __init__(self, max_page=None, jq_path='jq/channels.jq'):
-        super().__init__(Tab.Channels, max_page, jq_path)
-
-    def parse(self, player_config, data_config):
-        data = self._jq.transform(data_config)
-        c_token = data
-        return data, c_token
 
 
 class HomePageParser(BaseParser):

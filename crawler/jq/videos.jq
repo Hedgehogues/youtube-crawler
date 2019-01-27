@@ -1,15 +1,15 @@
-.contents.twoColumnBrowseResultsRenderer.tabs[1].tabRenderer.content.sectionListRenderer | {
+.contents.twoColumnBrowseResultsRenderer.tabs[]? | select(.tabRenderer.selected == true) | .tabRenderer.content.sectionListRenderer | {
 	"tabs": .subMenu.channelSubMenuRenderer.contentTypeSubMenuItems | [
 		.[]? | {
 			"title": .title, 
 			"url": .endpoint.commandMetadata.webCommandMetadata.url
 		}
 	], 
-	"page_loader": .contents[0].itemSectionRenderer.contents[0].gridRenderer.continuations[0].nextContinuationData | {
+	"next_page_token": .contents[0].itemSectionRenderer.contents[0].gridRenderer.continuations[0].nextContinuationData | {
 		"ctoken": .continuation, 
 		"itct":  .clickTrackingParams
 	}, 
-	"owner_videos": .contents[0].itemSectionRenderer.contents[0].gridRenderer.items | [
+	"videos": .contents[0].itemSectionRenderer.contents[0].gridRenderer.items | [
 		.[]?.gridVideoRenderer | {
 			"title": .title.simpleText, 
 			"video_id": .videoId, 
