@@ -1,4 +1,4 @@
-from crawler import utils, parsers
+from crawler import parsers
 from crawler.loaders import Loader
 
 
@@ -17,7 +17,6 @@ class Scrapper:
         If you want to add new pages, you should be add new constants int crawler.loaders.Tab
     """
     def __init__(self, loader, parsers=None, logger=None, channel_descr_dumper=None, hard=True, channel_filter=None):
-        self._is_parsed = ""
         self._hard = hard
 
         self._parsers = parsers if parsers is not None else []
@@ -43,23 +42,16 @@ class Scrapper:
         with open(descr, 'w') as fd:
             self._channel_descr_dumper.dump(fd, descr)
 
-    def parse(self, channel_id, force=False):
-        if self._is_parsed == "channel_id" and not force:
-            raise utils.ParserCallError("Video is parsed already", channel_id)
-        if force:
-            # TODO: логгировать вызов с force
-            pass
-        self._is_parsed = channel_id
+    def parse(self, channel_id):
         channel_descr = {}
         for p in self._parsers:
             player_config, data_config = self._loader.load_page(channel_id, p.tab)
             channel_descr[p.tab] = self._page_process(p, player_config, data_config)
 
-    def download(self, descr):
-        if self._is_parsed:
-            raise utils.ParserCallError("Video is not parsed yet", channel_id)
+    def download(self, channel_id, descr_videos):
         # TODO: реализовать обкачку видео, инорфмацию по которым скачали
         # TODO: логгировать все статусы обкачки для того, чтобы можно было возобновить обкачку с прежнего места
+        pass
 
 
 channel_id = 'UCSoYSTOt1g_Vdo8xCJeQpHw'
