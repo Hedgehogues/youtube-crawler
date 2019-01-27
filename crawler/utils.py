@@ -9,11 +9,21 @@ class JsonExtractionError(Exception):
         self.msg = msg
 
 
+class JsonSerializableError(Exception):
+    """Json with data not found in a page
+
+    This exception may be thrown when one page of channel consist not valid json
+    """
+    def __init__(self, msg, e=None):
+        self.e = e
+        self.msg = msg
+
+
 class RequestError(Exception):
     """Json with data not valid
 
-    This exception may be thrown when http-request was failed or
-    body of response was not parsed
+    This exception may be thrown when http-request is failed or
+    body of response is not parsed
     """
     def __init__(self, msg, e=None):
         self.e = e
@@ -21,10 +31,14 @@ class RequestError(Exception):
 
 
 class ParserCallError(Exception):
-    """Parser already was called for this channel_id
+    """Parser already is called for this channel_id or
+    Parser is not called for this channel yet
 
-    This channel_id was processed at prev step. Please, use flag
-    "force=True", if you want call parser or set another channel_id
+    * This channel_id is processed at prev step. Please, use flag
+    "force=True", if you want call parser or set another channel_id.
+
+    * Otherwise, this exception may be execute when Parser not called yet.
+    Please, execute Parser to fix this exception.
     """
     def __init__(self, msg, e=None):
         self.e = e

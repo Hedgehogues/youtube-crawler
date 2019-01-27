@@ -1,3 +1,4 @@
+import json
 from enum import Enum
 import requests
 
@@ -27,7 +28,7 @@ class Loader:
         self.data_config = 'window["ytInitialData"] = '
         self.player_config = 'window["ytInitialPlayerResponse"] = (\n        '
 
-    def load(self, channel_id, tab=Tab.HomePage):
+    def load_page(self, channel_id, tab=Tab.HomePage):
         text = self.__get_resp_text(self._base_url + channel_id + '/' + tab.value)
 
         player_config = self.__get_player_config(text)
@@ -41,8 +42,11 @@ class Loader:
             finish_ind = start_ind + text[start_ind:].find(';\n')
             config = text[start_ind:finish_ind]
         except Exception as e:
-            raise utils.JsonExtractionError("Data config extraction failed", e)
-        return config
+            raise utils.JsonExtractionError("Data config extraction is failed", e)
+        try:
+            return json.loads(config)
+        except Exception as e:
+            raise utils.JsonSerializableError("Data config serialize is failed", e)
 
     def __get_player_config(self, text):
         try:
@@ -50,8 +54,11 @@ class Loader:
             finish_ind = start_ind + text[start_ind:].find(');\n')
             config = text[start_ind:finish_ind]
         except Exception as e:
-            raise utils.JsonExtractionError("Data config extraction failed", e)
-        return config
+            raise utils.JsonExtractionError("Player config extraction is failed", e)
+        try:
+            return json.loads(config)
+        except Exception as e:
+            raise utils.JsonSerializableError("Player config serialize is failed", e)
 
     def __get_resp_text(self, url, params=None, headers=None, method='GET'):
         try:
@@ -59,6 +66,8 @@ class Loader:
             headers = self._headers if headers is None else headers
             resp = requests.request(method, url, headers=headers, params=params)
         except Exception as e:
-            raise utils.RequestError("Connection was failed", e)
+            raise utils.RequestError("Connection is failed", e)
         utils.check_resp(resp)
         return resp.text
+
+

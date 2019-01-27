@@ -1,50 +1,65 @@
 from crawler import utils, parsers
-from crawler.loaders import Loader, Tab
+from crawler.loaders import Loader
 
 
 class Scrapper:
-    def __init__(self, loader, parsers=None, logger=None):
+    """
+    Scrapper download concrete channel with (or without video) from Youtube.
+
+    loader : crawler.loaders.Loader
+        This object must satisfy the interface `crawler.loaders.Loader`.
+        Loader download and extract json with data from next pages:
+            * featured
+            * videos
+            * community
+            * channels
+            * about
+        If you want to add new pages, you should be add new constants int crawler.loaders.Tab
+    """
+    def __init__(self, loader, parsers=None, logger=None, channel_descr_dumper=None, hard=True, channel_filter=None):
+        self._is_parsed = ""
+        self._hard = hard
+
         self._parsers = parsers if parsers is not None else []
         self._loader = loader
-        self._is_parsed = ""
+        self._channel_descr_dumper = channel_descr_dumper
+        self._channel_filter = channel_filter
 
-        self.channel_descr_ = {}
-        self.logger = logger
+        self._logger = logger
+
+    def _page_process(self, p, player_config, data_config):
+        count_pages = 0
+        channel_descr = []
+        while True:
+            count_pages += 1
+            descr, next_page_token = p.parse(player_config, data_config)
+            channel_descr.append(descr)
+            if count_pages >= p.max_page_token or len(next_page_token) == 0:
+                break
+            player_config, data_config = self._loader.reload_page(next_page_token, p.tab)
+        return channel_descr
+
+    def _dump(self, descr):
+        with open(descr, 'w') as fd:
+            self._channel_descr_dumper.dump(fd, descr)
 
     def parse(self, channel_id, force=False):
         if self._is_parsed == "channel_id" and not force:
-            raise utils.ParserCallError(channel_id)
+            raise utils.ParserCallError("Video is parsed already", channel_id)
         if force:
             # TODO: логгировать вызов с force
             pass
         self._is_parsed = channel_id
-        self.channel_descr_ = {}
+        channel_descr = {}
         for p in self._parsers:
-            player_config, data_config = self._loader.load(channel_id, p.tab)
-            self.channel_descr_[p.name] = p.parse(player_config, data_config)
+            player_config, data_config = self._loader.load_page(channel_id, p.tab)
+            channel_descr[p.tab] = self._page_process(p, player_config, data_config)
 
-    def dump(self, fd):
-        pass
-
-    def download(self):
+    def download(self, descr):
         if self._is_parsed:
-            raise Exception("Videos not parsed")
+            raise utils.ParserCallError("Video is not parsed yet", channel_id)
         # TODO: реализовать обкачку видео, инорфмацию по которым скачали
         # TODO: логгировать все статусы обкачки для того, чтобы можно было возобновить обкачку с прежнего места
-
-    def get_all_videos(self, only_id=True):
-        if only_id:
-            return self.channel_descr_[Tab.Videos]
-        return self.channel_descr_[Tab.Videos]
-
-    def get_all_channels(self, only_id=True):
-        channels = []
-        for channel in self.channel_descr_:
-            if only_id:
-                channels += channel
-                continue
-            channels += channel
-        return channels
 
 
 channel_id = 'UCSoYSTOt1g_Vdo8xCJeQpHw'
@@ -53,5 +68,5 @@ Scrapper(l, [
     parsers.HomePageParser(),
     parsers.VideosParser(),
     parsers.ChannelsParser(),
-    parsers.AboutParser
+    parsers.AboutParser(),
 ]).parse(channel_id)
