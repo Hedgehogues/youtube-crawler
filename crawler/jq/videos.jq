@@ -10,7 +10,7 @@
 		"itct":  .clickTrackingParams
 	}, 
 	"owner_videos": .contents[0].itemSectionRenderer.contents[0].gridRenderer.items | [
-		.[].gridVideoRenderer | {
+		.[]?.gridVideoRenderer | {
 			"title": .title.simpleText, 
 			"video_id": .videoId, 
 			"published_time": .publishedTimeText.simpleText, 

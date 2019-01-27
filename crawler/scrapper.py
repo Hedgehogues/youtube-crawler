@@ -1,20 +1,23 @@
+from crawler import utils, parsers
 from crawler.loaders import Loader, Tab
-from crawler.parsers import HomePageParser
 
 
 class Scrapper:
     def __init__(self, loader, parsers=None, logger=None):
         self._parsers = parsers if parsers is not None else []
         self._loader = loader
-        self._is_parsed = False
+        self._is_parsed = ""
 
         self.channel_descr_ = {}
         self.logger = logger
 
     def parse(self, channel_id, force=False):
-        if self._is_parsed and not force:
-            return
-        self._is_parsed = True
+        if self._is_parsed == "channel_id" and not force:
+            raise utils.ParserCallError(channel_id)
+        if force:
+            # TODO: логгировать вызов с force
+            pass
+        self._is_parsed = channel_id
         self.channel_descr_ = {}
         for p in self._parsers:
             player_config, data_config = self._loader.load(channel_id, p.tab)
@@ -46,4 +49,9 @@ class Scrapper:
 
 channel_id = 'UCSoYSTOt1g_Vdo8xCJeQpHw'
 l = Loader()
-Scrapper(l, [HomePageParser(), HomePageParser()]).parse(channel_id)
+Scrapper(l, [
+    parsers.HomePageParser(),
+    parsers.VideosParser(),
+    parsers.ChannelsParser(),
+    parsers.AboutParser
+]).parse(channel_id)

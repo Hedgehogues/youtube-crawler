@@ -1,7 +1,7 @@
-import json
 from enum import Enum
-
 import requests
+
+from crawler import utils
 
 
 class Tab(Enum):
@@ -10,16 +10,6 @@ class Tab(Enum):
     Videos = 'videos'
     Community = 'community'
     About = 'about'
-
-
-def check_resp(resp):
-    if resp.status_code != 200:
-        raise Exception("Status code exception: %d. Url: %s" % (resp.status_code, resp.url))
-
-
-def none_exception(arg, text="None exception"):
-    if arg is None:
-        raise Exception(text)
 
 
 class Loader:
@@ -46,24 +36,29 @@ class Loader:
         return player_config, data_config
 
     def __get_data_config(self, text):
-        start_ind = text.find(self.data_config)+len(self.data_config)
-        finish_ind = start_ind + text[start_ind:].find(';\n')
-        config = text[start_ind:finish_ind]
-        return json.loads(config)
+        try:
+            start_ind = text.find(self.data_config)+len(self.data_config)
+            finish_ind = start_ind + text[start_ind:].find(';\n')
+            config = text[start_ind:finish_ind]
+        except Exception as e:
+            raise utils.JsonExtractionError("Data config extraction failed", e)
+        return config
 
     def __get_player_config(self, text):
-        start_ind = text.find(self.player_config)+len(self.player_config)
-        finish_ind = start_ind + text[start_ind:].find(');\n')
-        config = text[start_ind:finish_ind]
-        return json.loads(config)
+        try:
+            start_ind = text.find(self.player_config)+len(self.player_config)
+            finish_ind = start_ind + text[start_ind:].find(');\n')
+            config = text[start_ind:finish_ind]
+        except Exception as e:
+            raise utils.JsonExtractionError("Data config extraction failed", e)
+        return config
 
     def __get_resp_text(self, url, params=None, headers=None, method='GET'):
-        params = self._query_string if params is None else params
-        headers = self._headers if headers is None else headers
-        resp = requests.request(method, url, headers=headers, params=params)
-        check_resp(resp)
+        try:
+            params = self._query_string if params is None else params
+            headers = self._headers if headers is None else headers
+            resp = requests.request(method, url, headers=headers, params=params)
+        except Exception as e:
+            raise utils.RequestError("Connection was failed", e)
+        utils.check_resp(resp)
         return resp.text
-
-
-l = Loader()
-print(l.load('UCSoYSTOt1g_Vdo8xCJeQpHw', Tab.HomePage))

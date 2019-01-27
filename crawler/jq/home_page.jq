@@ -1,9 +1,9 @@
 {
 	"owner_channel": {
-		"channel_id": .header.c4TabbedHeaderRenderer .channelId, 
-		"title": .header.c4TabbedHeaderRenderer .title, 
+		"channel_id": .header.c4TabbedHeaderRenderer.channelId, 
+		"title": .header.c4TabbedHeaderRenderer.title, 
 		"verified":  .header.c4TabbedHeaderRenderer | has("badges"),
-		"tags": [.microformat.microformatDataRenderer.tags[]?],
+		"tags": [.microformat.microformatDataRenderer.tags[]?]
 	}, 
 	"videos": .contents.twoColumnBrowseResultsRenderer.tabs[0].tabRenderer.content.sectionListRenderer | {
  		"others": [
@@ -16,7 +16,7 @@
 						"published_time": .publishedTimeText.simpleText, 
 						"view_count": .viewCountText.simpleText, 
 						"has_custom_subtitles": has("badges"),
-						duration": .thumbnailOverlays[0].thumbnailOverlayTimeStatusRenderer.text.simpleText
+						"duration": .thumbnailOverlays[0].thumbnailOverlayTimeStatusRenderer.text.simpleText
 					}
 				]   
 			}
@@ -39,14 +39,6 @@
 		}
 	]
 }
-
-
-
-
-
-
-
-
 
 
 

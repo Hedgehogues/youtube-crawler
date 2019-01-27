@@ -1,72 +1,46 @@
 from crawler.loaders import Tab
 
+from jq import jq
 
-class VideosParser:
+
+class BaseParser:
+    def __init__(self, tab, jq_path='jq/videos.jq'):
+        self.tab = tab
+        with open(jq_path) as fd_fq:
+            fd = fd_fq.read()
+            self._jq = jq(fd)
+
+    def get_channels(self):
+        return []
+
+    def parse(self, player_config, data_config):
+        x = self._jq.transform(data_config)
+        return
+
+
+class VideosParser(BaseParser):
     def __init__(self, max_page=None, jq_path='jq/videos.jq'):
-        self.max_page_ = max_page
-        self.tab_ = Tab.Videos
-        with open(jq_path) as fd_fq:
-            self._jq_pattern = fd_fq.read()
-
-    def get_channels(self):
-        return []
-
-    def parse(self, player_config, data_config):
-        print(player_config, data_config)
-        return
+        self.max_page = max_page
+        super().__init__(Tab.Videos, jq_path)
 
 
-class AboutParser:
+class AboutParser(BaseParser):
     def __init__(self, jq_path='jq/about.jq'):
-        self.tab_ = Tab.HomePage
-        with open(jq_path) as fd_fq:
-            self._jq_pattern = fd_fq.read()
-
-    def get_channels(self):
-        return []
-
-    def parse(self, player_config, data_config):
-        print(player_config, data_config)
-        return
+        super().__init__(Tab.About, jq_path)
 
 
-class CommunityParser:
-    def __init__(self, max_page=None):
-        self.tab_ = Tab.Community
-        self.max_page_ = max_page
-
-    def get_channels(self):
-        return []
-
-    def parse(self, player_config, data_config):
-        print(player_config, data_config)
-        return
+class CommunityParser(BaseParser):
+    def __init__(self, max_page=None, jq_path='jq/videos'):
+        self.max_page = max_page
+        super().__init__(Tab.Community, jq_path)
 
 
-class ChannelsParser:
+class ChannelsParser(BaseParser):
     def __init__(self, max_page=None, jq_path='jq/channels.jq'):
-        self.tab_ = Tab.Channels
-        self.max_page_ = max_page
-        with open(jq_path) as fd_fq:
-            self._jq_pattern = fd_fq.read()
-
-    def get_channels(self):
-        return []
-
-    def parse(self, player_config, data_config):
-        print(player_config, data_config)
-        return
+        self.max_page = max_page
+        super().__init__(Tab.Channels, jq_path)
 
 
-class HomePageParser:
+class HomePageParser(BaseParser):
     def __init__(self, jq_path='jq/home_page.jq'):
-        self.tab_ = Tab.HomePage
-        with open(jq_path) as fd_fq:
-            self._jq_pattern = fd_fq.read()
-
-    def get_channels(self):
-        return []
-
-    def parse(self, player_config, data_config):
-        print(player_config, data_config)
-        return
+        super().__init__(Tab.HomePage, jq_path)
