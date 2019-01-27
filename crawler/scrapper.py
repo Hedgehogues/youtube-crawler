@@ -11,7 +11,7 @@ class Scrapper:
         Loader download and extract json with data from next pages:
             * featured
             * videos
-            * community
+            * community (not implemented)
             * channels
             * about
         If you want to add new pages, you should be add new constants int crawler.loaders.Tab
@@ -26,16 +26,14 @@ class Scrapper:
 
         self._logger = logger
 
-    def _page_process(self, p, player_config, data_config):
-        count_pages = 0
+    def _reload_pages(self, p, next_page_token):
         channel_descr = []
-        while True:
+        count_pages = 1
+        while count_pages < p.max_page_token and len(next_page_token) != 0:
             count_pages += 1
-            descr, next_page_token = p.parse(player_config, data_config)
-            channel_descr.append(descr)
-            if count_pages >= p.max_page_token or len(next_page_token) == 0:
-                break
             player_config, data_config = self._loader.reload_page(next_page_token)
+            descr, next_page_token = p.reload_parse(player_config, data_config)
+            channel_descr.append(descr)
         return channel_descr
 
     def _dump(self, descr):
@@ -46,7 +44,8 @@ class Scrapper:
         channel_descr = {}
         for p in self._parsers:
             player_config, data_config = self._loader.load_page(channel_id, p.tab)
-            channel_descr[p.tab] = self._page_process(p, player_config, data_config)
+            descr, next_page_token = p.parse(player_config, data_config)
+            channel_descr[p.tab] = [descr] + self._reload_pages(p, next_page_token)
 
     def download(self, channel_id, descr_videos):
         # TODO: реализовать обкачку видео, инорфмацию по которым скачали
