@@ -1,8 +1,7 @@
 import re
-from collections import namedtuple
 from enum import Enum
 
-from crawler.base import BaseYoutubeDL
+from crawler.crawler import BaseYoutubeDL
 
 
 class ChannelStatus(Enum):

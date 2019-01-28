@@ -1,6 +1,6 @@
-from crawler.loaders import Tab
-
 from jq import jq
+
+from crawler.loaders import Tab
 
 
 class PageDescription:
@@ -11,8 +11,9 @@ class PageDescription:
         return self.channel_descrs['channels'][key]
 
 
+# TODO: всюду ниже jq_path захордкожен 'crawler/'
 class BaseParser:
-    def __init__(self, tab, max_page=1, jq_path='jq/videos.jq'):
+    def __init__(self, tab, max_page=1, jq_path='crawler/jq/videos.jq'):
         if max_page is not None and max_page < 1:
             raise AttributeError("Attribute max_page must be more 0")
         self.max_page = max_page
@@ -67,21 +68,21 @@ class ReloaderParser(BaseParser):
 
 
 class VideosParser(ReloaderParser):
-    def __init__(self, max_page=None, jq_load_path='jq/videos.jq', jq_reload_path='jq/videos_reload.jq'):
+    def __init__(self, max_page=None, jq_load_path='crawler/jq/videos.jq', jq_reload_path='crawler/jq/videos_reload.jq'):
         super().__init__(Tab.Videos, max_page, 'videos', jq_load_path, jq_reload_path)
         self.max_page = max_page
 
 
 class ChannelsParser(ReloaderParser):
-    def __init__(self, max_page=None, jq_load_path='jq/channels.jq', jq_reload_path='jq/channels_reload.jq'):
+    def __init__(self, max_page=None, jq_load_path='crawler/jq/channels.jq', jq_reload_path='crawler/jq/channels_reload.jq'):
         super().__init__(Tab.Channels, max_page, 'channels', jq_load_path, jq_reload_path)
 
 
 class AboutParser(BaseParser):
-    def __init__(self, jq_path='jq/about.jq'):
+    def __init__(self, jq_path='crawler/jq/about.jq'):
         super().__init__(Tab.About, 1, jq_path)
 
 
 class HomePageParser(BaseParser):
-    def __init__(self, jq_path='jq/home_page.jq'):
+    def __init__(self, jq_path='crawler/jq/home_page.jq'):
         super().__init__(Tab.HomePage, 1, jq_path)

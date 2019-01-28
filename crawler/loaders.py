@@ -2,6 +2,7 @@ import json
 from copy import deepcopy
 from enum import Enum
 import requests
+import youtube_dl
 
 from crawler import utils
 
@@ -96,3 +97,39 @@ class Loader(BaseLoader):
             return json.loads(config)
         except Exception as e:
             raise utils.JsonSerializableError("Player config serialize is failed", e)
+
+
+class YoutubeDlLoader:
+    def __init__(self, ydl_params=None):
+        self._base_url = 'https://www.youtube.com/watch'
+
+        ydl = youtube_dl.YoutubeDL({'listsubtitles': True})
+        self._video_descr_extractor = ydl.get_info_extractor(youtube_dl.gen_extractors()[1125].ie_key())
+
+        audio_ydl_params = ydl_params
+        if audio_ydl_params is None:
+            audio_ydl_params = {
+                'writeautomaticsub': True,
+                'outtmpl': 'data/%(channel_id)s/%(id)s',
+                'format': 'bestaudio/best',
+                'prefer-avconv': True,
+                'subtitleslangs': ['ru'],
+                'simulate': False,
+                'max_sleep_interval': 2,
+                'sleep_interval': 1,
+                'ignoreerrors': False,
+            }
+        self._audio_ydl = youtube_dl.YoutubeDL(audio_ydl_params)
+
+    def load(self, video_id):
+        # TODO: реализовать обкачку видео, инорфмацию по которым скачали
+        # TODO: логгировать все статусы обкачки для того, чтобы можно было возобновить обкачку с прежнего места
+        # TODO: заменить на кастомные обкачки, так как youtube-dl использует 2 обращения (за субтитрами и за видео)
+
+        url = self._base_url + '?v=%s' % video_id
+        descr = self._video_descr_extractor.extract(url)
+        if 'ru' not in descr['automatic_captions']:
+            return None
+
+        self._audio_ydl.download([url])
+        return descr

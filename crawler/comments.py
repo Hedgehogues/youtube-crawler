@@ -1,4 +1,4 @@
-from crawler.base import BaseYoutubeDL
+from crawler.crawler import BaseYoutubeDL
 
 
 class CommentsYoutubeDl(BaseYoutubeDL):

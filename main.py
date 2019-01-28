@@ -1,56 +1,21 @@
-# Подтверждён канал или нет? (дополнительная фича для детекции наличия субтитров)
-# Наличие комментов у видео (русских комментов)
-from langdetect import detect
+from crawler.loaders import Loader, Reloader, YoutubeDlLoader, Tab
+from crawler.scrapper import Scrapper
+from crawler import parsers
 
-from crawler.channel import ChannelYoutubeDLParser, priorities_channels, ChannelStatus
+channel_id = 'UCO08VxZ3ZsYi5-TIsO3dvFw'
+loader = Loader()
+reloader = Reloader()
+ydl_loader = YoutubeDlLoader()
+scrapper = Scrapper(
+    loader, reloader, ydl_loader,
+    [
+        parsers.HomePageParser(),
+        parsers.VideosParser(max_page=3),
+        parsers.ChannelsParser(max_page=3),
+        parsers.AboutParser(),
+    ]
+)
+descr = scrapper.parse(channel_id)
+scrapper.download(descr[Tab.Videos][1]['video_id'])
+print(descr)
 
-
-def default_channel_validator(channel):
-    try:
-        if detect(channel.full_descr) == 'ru' or detect(channel.short_descr) == 'ru':
-            return ChannelStatus.RU
-        return ChannelStatus.FOREIGN
-    except Exception as _:
-        return ChannelStatus.UNDEFINED
-
-
-class YoutubeCrawler:
-    def __init__(self, parser=None, channel_validator=default_channel_validator):
-        self.__parser = ChannelYoutubeDLParser(priorities_channels)
-        self.__set_validator = channel_validator
-        if parser is not None:
-            self.__parser = parser
-
-        self.used_channels_ = {}
-        self.count_ = 0
-
-    def __dfs(self, channel_id):
-        self.count_ += 1
-        print(channel_id, self.count_)
-        channel = self.__parser.get_channel_info(channel_id)
-        channel.status = self.__set_validator(channel)
-        if channel.status != ChannelStatus.RU:
-            return
-        self.used_channels_[channel_id] = channel
-        for item in channel.channels:
-            if item['channel_id'] not in self.used_channels_:
-                self.__dfs(item['channel_id'])
-        return
-
-    def process(self, channel_ids):
-        self.used_channels_ = {}
-        self.count_ = 0
-        for v in channel_ids:
-            if v not in self.used_channels_:
-                self.__dfs(v)
-        return
-
-
-channel_id = 'UCSoYSTOt1g_Vdo8xCJeQpHw'
-crwl = YoutubeCrawler()
-crwl.process([channel_id])
-
-# Вытаскивать каналы с главной (похожие)
-# Обкачать все каналы и видео
-ydl = ChannelYoutubeDLParser(priorities_channels)
-descr = ydl.get_channel_info(channel_id)

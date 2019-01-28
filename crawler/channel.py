@@ -1,5 +1,4 @@
 import re
-from collections import namedtuple
 from enum import Enum
 
 from crawler.base import BaseYoutubeDL

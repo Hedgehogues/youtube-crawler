@@ -1,5 +1,6 @@
-from crawler import parsers
-from crawler.loaders import Loader, Reloader, Tab
+import youtube_dl
+
+from crawler.loaders import Tab
 
 
 class Scrapper:
@@ -16,13 +17,12 @@ class Scrapper:
             * TODO: community
         If you want to add new pages, you should be add new constants int crawler.loaders.Tab
     """
-    def __init__(self, loader, reloader, parsers=None, logger=None, channel_descr_dumper=None, hard=True, channel_filter=None):
-        self._hard = hard
+    def __init__(self, loader, reloader, ydl_loader, parsers=None, logger=None, channel_filter=None):
 
         self._parsers = parsers if parsers is not None else []
         self._reloader = reloader
+        self._ydl_loader = ydl_loader
         self._loader = loader
-        self._channel_descr_dumper = channel_descr_dumper
         self._channel_filter = channel_filter
 
         self._logger = logger
@@ -45,10 +45,6 @@ class Scrapper:
             descr_slice += descr
         return descr_slice
 
-    def _dump(self, descr):
-        with open(descr, 'w') as fd:
-            self._channel_descr_dumper.dump(fd, descr)
-
     def parse(self, channel_id):
         # TODO: добавить логгирование
         channel_descr = {}
@@ -58,21 +54,5 @@ class Scrapper:
             channel_descr[p.tab] = descr + self._reload_pages(p, next_page_token)
         return channel_descr
 
-    def download(self, channel_id, descr_videos):
-        # TODO: реализовать обкачку видео, инорфмацию по которым скачали
-        # TODO: логгировать все статусы обкачки для того, чтобы можно было возобновить обкачку с прежнего места
-        pass
-
-
-channel_id = 'UCO08VxZ3ZsYi5-TIsO3dvFw'
-loader = Loader()
-reloader = Reloader()
-Scrapper(
-    loader, reloader,
-    [
-        parsers.HomePageParser(),
-        parsers.VideosParser(max_page=3),
-        parsers.ChannelsParser(max_page=None),
-        parsers.AboutParser(),
-    ]
-).parse(channel_id)
+    def download(self, video_id):
+        return self._ydl_loader.load(video_id)
