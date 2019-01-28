@@ -1,19 +1,3 @@
-# Подтверждён канал или нет? (дополнительная фича для детекции наличия субтитров)
-# Наличие комментов у видео (русских комментов)
-from langdetect import detect
-
-from crawler.channel import ChannelStatus, ChannelYoutubeDLParser
-
-
-def default_channel_validator(channel):
-    try:
-        if detect(channel.full_descr) == 'ru' or detect(channel.short_descr) == 'ru':
-            return ChannelStatus.RU
-        return ChannelStatus.FOREIGN
-    except Exception as _:
-        return ChannelStatus.UNDEFINED
-
-
 class YoutubeCrawler:
     def __init__(self, parser=None, channel_validator=default_channel_validator):
         self.__parser = ChannelYoutubeDLParser(priorities_channels)

@@ -1,5 +1,3 @@
-import youtube_dl
-
 from crawler.loaders import Tab
 
 
@@ -52,6 +50,8 @@ class Scrapper:
             player_config, data_config = self._loader.load(channel_id, p.tab, self._query_params[p.tab])
             descr, next_page_token = p.parse(player_config, data_config)
             channel_descr[p.tab] = descr + self._reload_pages(p, next_page_token)
+        if self._channel_filter is not None:
+            channel_descr[Tab.About][0]['language'] = self._channel_filter.apply(channel_descr)
         return channel_descr
 
     def download(self, video_id):
