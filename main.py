@@ -1,11 +1,9 @@
-from collections import Counter
-
 from crawler.filter import Filter
 from crawler.loaders import Loader, Reloader, YoutubeDlLoader, Tab
 from crawler.scrapper import Scrapper
 from crawler import parsers
 
-channel_id = 'UCO08VxZ3ZsYi5-TIsO3dvFw'
+channel_id = 'UCzAzPC4VWIMHqrnIM1iBPsQ'
 loader = Loader()
 reloader = Reloader()
 ydl_loader = YoutubeDlLoader()
@@ -14,7 +12,7 @@ scrapper = Scrapper(
     loader, reloader, ydl_loader,
     [
         parsers.HomePageParser(),
-        parsers.VideosParser(max_page=3),
+        parsers.VideosParser(max_page=10),
         parsers.ChannelsParser(max_page=3),
         parsers.AboutParser(),
     ],

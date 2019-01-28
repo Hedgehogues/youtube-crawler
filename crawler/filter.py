@@ -13,8 +13,9 @@ class ChannelStatus(Enum):
 
 
 class Filter:
-    def __init__(self):
-        pass
+    def __init__(self, len_descr=50, len_descr_parts=50):
+        self._len_descr = len_descr
+        self._len_descr_parts = len_descr_parts
 
     def apply(self, descr):
         try:
@@ -29,7 +30,8 @@ class Filter:
             videos_title = [langdetect.detect(video['title']) for video in descr[Tab.Videos]]
         except:
             videos_title = []
-        if description == 'ru' or description_parts == 'ru':
+        if description == 'ru' and len(description) > self._len_descr or \
+                description_parts == 'ru' and len(description_parts) > self._len_descr_parts:
             return ChannelStatus.STRONG_RU
         counter = Counter(videos_title)
         if len(counter) == 0:
