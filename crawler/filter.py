@@ -18,6 +18,7 @@ class Filter:
         self._len_descr_parts = len_descr_parts
 
     def apply(self, descr):
+        # TODO: выпиливать ссылки
         try:
             description = langdetect.detect(descr[Tab.About][0]['description'])
         except:

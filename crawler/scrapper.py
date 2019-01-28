@@ -32,7 +32,7 @@ class Scrapper:
             Tab.About: None,
         }
 
-    def _reload_pages(self, p, next_page_token):
+    def __reload_pages(self, p, next_page_token):
         count_pages = 1
         descr_slice = []
         while (p.max_page is None or count_pages < p.max_page) and next_page_token is not None:
@@ -49,9 +49,12 @@ class Scrapper:
         for p in self._parsers:
             player_config, data_config = self._loader.load(channel_id, p.tab, self._query_params[p.tab])
             descr, next_page_token = p.parse(player_config, data_config)
-            channel_descr[p.tab] = descr + self._reload_pages(p, next_page_token)
+            channel_descr[p.tab] = descr + self.__reload_pages(p, next_page_token)
+        is_valid = True
         if self._channel_filter is not None:
             channel_descr[Tab.About][0]['language'] = self._channel_filter.apply(channel_descr)
+            is_valid = channel_descr[Tab.About][0]['language'] == 'ru'
+        channel_descr[Tab.Meta] = {'is_valid': is_valid}
         return channel_descr
 
     def download(self, video_id):
