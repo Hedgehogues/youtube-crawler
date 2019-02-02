@@ -1,33 +1,19 @@
-class CacheSqlLite:
-    def __init__(self, cache_path='~/youtube-crawler', file_name='description.sql'):
-        pass
+import sqlite3
 
-    def set_channel_processed(self, channel_id):
-        pass
 
-    def set_channel_error(self, channel_id, err):
-        pass
+class DBCache:
+    def __create_db(self):
+        c = self.conn.cursor()
+        c.execute('''create table video (date text, trans text, symbol text, qty real, price real)''')
+        c.execute('''create table video (date text, trans text, symbol text, qty real, price real)''')
+        self.conn.commit()
+        c.close()
 
-    def set_current_channel(self, channel_id):
-        pass
+    def __init__(self, path='data/db.sql'):
+        self.conn = sqlite3.connect(path)
 
-    def get_current_channel(self, channel_id):
-        pass
+    def write_channel(self, channel):
+        raise Exception("Not implemented")
 
-    def set_video_processed(self, channel_id):
-        pass
-
-    def set_video_error(self, channel_id, err):
-        pass
-
-    def set_channel(self, channel_id, channel_descr):
-        pass
-
-    def get_channel(self, channel_id):
-        pass
-
-    def get_video_info(self, video_id):
-        pass
-
-    def set_video_info(self, video_id, channel_descr):
-        pass
+    def read_channel(self, ordered=False, count=None, downloaded=False):
+        raise Exception("Not implemented")
