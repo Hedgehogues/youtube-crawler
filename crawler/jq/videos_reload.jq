@@ -1,13 +1,13 @@
 .[1].response.continuationContents.gridContinuation | {
 	"videos": [
 		.items[]?.gridVideoRenderer | {
- 			"title": .title.simpleText,
-  			"video_id": .videoId,
-  			"published_time": .publishedTimeText.simpleText,
-  			"view_counts": .viewCountText.simpleText,
-  			"has_custom_subtitles": has("badges"),
-  			"verified": has("ownerBadges"),
-  			"count_views": .shortViewCountText.simpleText
+			"id": .videoId,
+			"title": .title.simpleText,
+			"published_time": .publishedTimeText.simpleText,
+			"view_counts": .viewCountText.simpleText,
+			"has_custom_subtitles": has("badges"),
+			"verified": has("ownerBadges"),
+			"duration": .thumbnailOverlays[0].thumbnailOverlayTimeStatusRenderer.text.simpleText
  		}
 	], 
 	"next_page_token": .continuations[0].nextContinuationData | {

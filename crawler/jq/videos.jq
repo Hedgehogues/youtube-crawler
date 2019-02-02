@@ -11,13 +11,13 @@
 	}, 
 	"videos": .contents[0].itemSectionRenderer.contents[0].gridRenderer.items | [
 		.[]?.gridVideoRenderer | {
-			"title": .title.simpleText, 
-			"video_id": .videoId, 
+			"id": .videoId,
+			"title": .title.simpleText,
 			"published_time": .publishedTimeText.simpleText, 
 			"view_counts": .viewCountText.simpleText, 
 			"has_custom_subtitles": has("badges"), 
 			"verified": has("ownerBadges"), 
-			"count_views": .shortViewCountText.simpleText
+			"duration": .thumbnailOverlays[0].thumbnailOverlayTimeStatusRenderer.text.simpleText
 		}
 	]
 }

@@ -9,10 +9,22 @@ class DBCache:
         self.conn.commit()
         c.close()
 
-    def __init__(self, path='data/db.sql'):
+    def __init__(self, path='data/db.sql', hard=False):
+        if hard:
+            # TODO: flush db
+            pass
         self.conn = sqlite3.connect(path)
 
-    def write_channels(self, channels):
+    def flush(self):
+        raise Exception("Not implemented")
+
+    def set_video_descr(self, video_id, video):
+        raise Exception("Not implemented")
+
+    def read_video_descr(self, video_id, ordered=False, count=None, downloaded=False):
+        raise Exception("Not implemented")
+
+    def set_channels(self, channel_ids, channels):
         raise Exception("Not implemented")
 
     def read_channels(self, ordered=False, count=None, downloaded=False):
