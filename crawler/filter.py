@@ -23,14 +23,17 @@ class Filter:
             description = langdetect.detect(descr[Tab.About][0]['description'])
         except:
             description = ''
+
         try:
             description_parts = langdetect.detect(' '.join(descr[Tab.HomePage][0]['videos']['general']['description_parts']))
         except:
             description_parts = ''
+
         try:
             videos_title = [langdetect.detect(video['title']) for video in descr[Tab.Videos]]
         except:
             videos_title = []
+
         if description == 'ru' and len(description) > self._len_descr or \
                 description_parts == 'ru' and len(description_parts) > self._len_descr_parts:
             return ChannelStatus.STRONG_RU
