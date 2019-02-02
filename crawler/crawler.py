@@ -6,12 +6,16 @@ from crawler.scrapper import Scrapper
 
 
 class YoutubeCrawler:
-    def __init__(self, logger, cache=None, scraper=None, max_attempts=5):
+    def __init__(self, logger, cache=None, ydl_loader=None, scraper=None, max_attempts=5):
         self.__logger = logger
 
         self.__cache = cache
         if self.__cache is None:
             self.__cache = DBCache()
+
+        self.__ydl_loader = ydl_loader
+        if self.__ydl_loader is None:
+            self.__ydl_loader = YoutubeDlLoader()
 
         self.__scraper = scraper
         if self.__scraper is None:
@@ -22,10 +26,9 @@ class YoutubeCrawler:
     def __init_none_scraper(self, logger):
         loader = Loader()
         reloader = Reloader()
-        ydl_loader = YoutubeDlLoader()
         filter = Filter()
         scrapper = Scrapper(
-            loader=loader, reloader=reloader, ydl_loader=ydl_loader,
+            loader=loader, reloader=reloader,
             parsers=[
                 parsers.HomePageParser(),
                 parsers.VideosParser(max_page=10),
@@ -39,5 +42,4 @@ class YoutubeCrawler:
 
     def process(self, channel_ids=None):
         if channel_ids is None:
-            self.__cache.read_channel(False, None, False)
-        return
+            self.__cache.read_channels(False, None, False)

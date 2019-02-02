@@ -12,8 +12,8 @@ class DBCache:
     def __init__(self, path='data/db.sql'):
         self.conn = sqlite3.connect(path)
 
-    def write_channel(self, channel):
+    def write_channels(self, channels):
         raise Exception("Not implemented")
 
-    def read_channel(self, ordered=False, count=None, downloaded=False):
+    def read_channels(self, ordered=False, count=None, downloaded=False):
         raise Exception("Not implemented")

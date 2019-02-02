@@ -15,11 +15,10 @@ class Scrapper:
             * TODO: community
         If you want to add new pages, you should be add new constants int crawler.loaders.Tab
     """
-    def __init__(self, loader, reloader, ydl_loader, parsers=None, logger=None, channel_filter=None):
+    def __init__(self, loader, reloader, parsers=None, logger=None, channel_filter=None):
 
         self._parsers = parsers if parsers is not None else []
         self._reloader = reloader
-        self._ydl_loader = ydl_loader
         self._loader = loader
         self._channel_filter = channel_filter
 
@@ -56,6 +55,3 @@ class Scrapper:
             is_valid = channel_descr[Tab.About][0]['language'] == 'ru'
         channel_descr[Tab.Meta] = {'is_valid': is_valid}
         return channel_descr
-
-    def download(self, video_id):
-        return self._ydl_loader.load(video_id)
