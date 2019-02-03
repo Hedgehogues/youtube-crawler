@@ -1,5 +1,5 @@
 from crawler import parsers, utils
-from crawler.cache import DBCache
+from crawler.cache import DBSqlLiteCache
 from crawler.filter import Filter
 from crawler.loaders import Loader, Reloader, YoutubeDlLoader, Tab
 from crawler.scrapper import Scrapper
@@ -35,13 +35,18 @@ class BaseCrawler:
 
 
 class YoutubeCrawler(BaseCrawler):
+    # * TODO: Если загрузка была прервана, то все видео начинают обкачиваться заново. При этом, если скраперу было
+    #   TODO: указано скачать не все видео, а только часть, то при повторной загрузке, будет выбран другой набор видео
+
+    # * TODO: Скрапер обкачивает k видео, а Crawler m из них может отбраковать, после чего не скачает новые k - m видео
+
     def __init__(self, logger=None, cache=None, ydl_loader=None, scraper=None, videos_per_ch=None, max_attempts=5):
         super().__init__(logger, max_attempts)
         self.__videos_per_ch = videos_per_ch
 
         self.__cache = cache
         if self.__cache is None:
-            self.__cache = DBCache()
+            self.__cache = DBSqlLiteCache()
 
         self.__video_downloader = ydl_loader
         if self.__video_downloader is None:
@@ -70,55 +75,93 @@ class YoutubeCrawler(BaseCrawler):
         )
         self.__scraper = scrapper
 
+    @staticmethod
+    def __create_video(video_id, channel_id, full_descr, short_descr):
+        subtitles = full_descr['subtitles']
+        valid = short_descr['valid']  # TODO: вынести в crawler из scrapper
+        priority = short_descr['priority']  # TODO: вынести в crawler из scrapper
+
+        del full_descr['subtitles']
+        del short_descr['valid']
+        del short_descr['priority']
+        return {
+            'video_id': video_id,
+            'channel_id': channel_id,
+            'full_description': full_descr,
+            'short_description': short_descr,
+            'subtitles': subtitles,
+            'valid': valid,
+            'priority': priority
+        }
+
+    @staticmethod
+    def __create_channel(channel_id, download, preload, descr):
+        valid = True
+        priority = 0
+
+        return [{
+            'channel_id': channel_id,
+            'download': download,
+            'priority': priority,
+            'valid': valid,
+            'preload': preload,
+            'full_description': descr,
+        }]
+
+    def __extract_channels(self, descr):
+        raise utils.CrawlerExceptions("Not implemented")
+        return descr
+
     def __download_videos(self, descrs):
-        for descr_short in descrs[Tab.Videos]:
-            video_id = descr_short['id']
+        channel_id = descrs[Tab.HomePage]['owner_channel']['id']
+        for short_video_descr in descrs[Tab.Videos]:
+            video_id = short_video_descr['id']
 
-            err = self.__cache.get_video_descr(video_id)
+            self._info("Check in Cache videoId: %s" % video_id)
+            err = self.__cache.check_video_descr(video_id)
             if err is None:
-                err = utils.CrawlerExceptions(msg=self.__crash_msg % ("VideoIds", video_id))
-                self._error(err, err)
-
-            descr, err = self._apply(self.__video_downloader.load(descr_short))
-            self._warn(err, err)
-
-            err = self.__cache.set_video_descr(video_id, {'full_descr': descr, 'short_descr': descr})
-            self._allert(err, err)
-
-    def __base_channels_process(self, channel_ids):
-        if channel_ids is None:
-            self._info("There is not base channels")
-            return
-
-        ids = ','.join(channel_ids)
-        err = self.__cache.set_channels(channel_ids, None)
-        self._allert(err, utils.CacheSetChannelsError(msg="Base channelIds: [%s]" % ids, e=err))
-
-        channel_ids_, err = self.__cache.get_channels(ordered=False, count=None, downloaded=False)
-        self._allert(err, utils.CacheGetChannelsError(msg="Base channelIds: [%s]" % ids, e=err))
-
-        for channel_id in channel_ids_:
-            descrs, err = self._apply(lambda: self.__scraper.parse(channel_id))
-            self._warn(err, utils.ScrapperError(channel_id=channel_id, e=err))
-            if err is not None:
+                self._info("Such video already exist. VideoId: %d" % video_id)
                 continue
 
-            self.__download_videos(descrs)
+            self._info("Download video (videoId: %s) from youtube" % video_id)
+            full_video_descr, err = self._apply(self.__video_downloader.load(short_video_descr))
+            self._warn(err, err)
+
+            data = self.__create_video(video_id, channel_id, full_video_descr, short_video_descr)
+            err = self.__cache.set_video_descr(data)
+            self._allert(err, err)
 
     def process(self, channel_ids=None):
-        self.__base_channels_process(channel_ids)
-
-        channel_id, err = self.__cache.get_channels(ordered=True, count=1, downloaded=False)
+        self._info("Setting channel ids from arguments into Cache")
+        err = self.__cache.set_empty_channels(channel_ids)
         ch_ids_str = ','.join(channel_ids)
+        self._allert(err, err + "%s: [%s]" % ("ChannelIds", ch_ids_str))
+
+        self._info("Getting first channel from Cache")
+        channel_id, err = self.__cache.get_best_channel_id()
         self._error(err, err + self.__crash_msg % ("ChannelIds", ch_ids_str))
 
         while channel_id is not None:
-            descrs, err = self._apply(lambda: self.__scraper.parse(channel_id))
+            self._info("Scrappy channelId: %s" % channel_id)
+            descr, err = self._apply(lambda: self.__scraper.parse(channel_id))
             self._warn(err, utils.ScrapperError(channel_id=channel_id, e=err))
             if err is not None:
                 continue
 
-            self.__download_videos(descrs)
-
-            channel_id, err = self.__cache.get_channels(ordered=True, count=1, downloaded=False)
+            self._info("Setting current channel into Cache. ChannelId: %s" % channel_id)
+            data = self.__create_channel(channel_id, False, True, descr)
+            err = self.__cache.update_channels(data)
             self._error(err, err + self.__crash_msg % ("ChannelIds", ch_ids_str))
+
+            data = self.__extract_channels(descr)
+            ch_ids_str = ','.join([ch['id'] for ch in data])
+            self._info("Setting neighbours channels into Cache. ChannelIds: %s" % ch_ids_str)
+            err = self.__cache.update_channels(data)
+            self._error(err, err + self.__crash_msg % ("ChannelIds", ch_ids_str))
+
+            self._info("Downloading youtube for ChannelId: %s" % channel_id)
+            self.__download_videos(descr)
+
+            self._info("Getting next channel from Cache")
+            channel_id, err = self.__cache.get_best_channel_id()
+            self._error(err, err + self.__crash_msg % ("ChannelIds", channel_id))

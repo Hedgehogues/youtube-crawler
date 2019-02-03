@@ -44,14 +44,13 @@ class Scrapper:
 
     def parse(self, channel_id):
         # TODO: добавить логгирование
-        channel_descr = {}
+        descr = {}
         for p in self._parsers:
             player_config, data_config = self._loader.load(channel_id, p.tab, self._query_params[p.tab])
             descr, next_page_token = p.parse(player_config, data_config)
-            channel_descr[p.tab] = descr + self.__reload_pages(p, next_page_token)
-        is_valid = True
+            descr[p.tab] = descr + self.__reload_pages(p, next_page_token)
+        language = ''
         if self._channel_filter is not None:
-            channel_descr[Tab.About][0]['language'] = self._channel_filter.apply(channel_descr)
-            is_valid = channel_descr[Tab.About][0]['language'] == 'ru'
-        channel_descr[Tab.Meta] = {'is_valid': is_valid}
-        return channel_descr
+            language = self._channel_filter.apply(descr)
+        descr[Tab.Meta] = {'is_valid': language == 'ru', 'language': language}
+        return descr

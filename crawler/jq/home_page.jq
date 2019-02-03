@@ -1,6 +1,6 @@
 {
 	"owner_channel": {
-		"channel_id": .header.c4TabbedHeaderRenderer.channelId, 
+		"id": .header.c4TabbedHeaderRenderer.channelId,
 		"title": .header.c4TabbedHeaderRenderer.title, 
 		"verified":  .header.c4TabbedHeaderRenderer | has("badges"),
 		"count_subscribers": .header.c4TabbedHeaderRenderer.subscriberCountText.simpleText,
