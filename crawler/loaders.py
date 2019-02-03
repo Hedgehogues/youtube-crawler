@@ -12,7 +12,6 @@ class Tab(Enum):
     HomePage = 'featured'
     Videos = 'videos'
     About = 'about'
-    Meta = 0
 
 
 class BaseLoader:

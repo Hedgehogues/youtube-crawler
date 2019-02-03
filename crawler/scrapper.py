@@ -15,12 +15,11 @@ class Scrapper:
             * TODO: community
         If you want to add new pages, you should be add new constants int crawler.loaders.Tab
     """
-    def __init__(self, loader, reloader, parsers=None, logger=None, channel_filter=None):
+    def __init__(self, loader, reloader, parsers=None, logger=None):
 
         self._parsers = parsers if parsers is not None else []
         self._reloader = reloader
         self._loader = loader
-        self._channel_filter = channel_filter
 
         self._logger = logger
 
@@ -48,9 +47,5 @@ class Scrapper:
         for p in self._parsers:
             player_config, data_config = self._loader.load(channel_id, p.tab, self._query_params[p.tab])
             descr, next_page_token = p.parse(player_config, data_config)
-            descr[p.tab] = descr + self.__reload_pages(p, next_page_token)
-        language = ''
-        if self._channel_filter is not None:
-            language = self._channel_filter.apply(descr)
-        descr[Tab.Meta] = {'is_valid': language == 'ru', 'language': language}
+            descr[p.tab] = descr + self._reload_pages(p, next_page_token)
         return descr
