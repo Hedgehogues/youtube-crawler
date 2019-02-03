@@ -110,10 +110,11 @@ class YoutubeDlLoader:
         if audio_ydl_params is None:
             audio_ydl_params = {
                 'writeautomaticsub': True,
-                'outtmpl': 'data/%(channel_id)s/%(id)s',
+                'outtmpl': 'data/%(channel_id)s/%(id)s.wav',
                 'format': 'bestaudio/best',
                 'prefer-avconv': True,
                 'subtitleslangs': ['ru'],
+                'ext': 'wav',
                 'simulate': False,
                 'max_sleep_interval': 2,
                 'sleep_interval': 1,

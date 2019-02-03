@@ -2,7 +2,7 @@ import youtube_dl
 import os
 
 
-path_to_channels = 'channels.tsv'
+path_to_channels = 'base_channels.tsv'
 videos_dir = 'channels/'
 
 if not os.path.exists(videos_dir):

@@ -47,5 +47,5 @@ class Scrapper:
         for p in self._parsers:
             player_config, data_config = self._loader.load(channel_id, p.tab, self._query_params[p.tab])
             descr, next_page_token = p.parse(player_config, data_config)
-            descr[p.tab] = descr + self._reload_pages(p, next_page_token)
+            descr[p.tab] = descr + self.__reload_pages(p, next_page_token)
         return descr
