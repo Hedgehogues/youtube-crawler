@@ -20,10 +20,10 @@ class Dialogue:
 class AudioCutter:
     # TODO: в некоторых субтитрах есть более детальная разметка (указано какое слово когда должно появляться).
     # TODO: _1anwjN9tPA
-    # TODO: в некоторых субтитрах есть дублирование. От него требуется избавляться. Кроме того, есть очень маленькие
     # TODO: добавить возможность перезаписывать и нет
-    def __init__(self, wav_transcoder=None):
+    def __init__(self, wav_transcoder=None, threshold_len=1500):
         self.__out_format = 'wav'
+        self.__threshold_len = threshold_len
         self.__wav_transcoder = wav_transcoder
         if self.__wav_transcoder is None:
             self.__wav_transcoder = FfmpegWavTranscoder()
@@ -50,11 +50,17 @@ class AudioCutter:
         fd.close()
 
     @staticmethod
-    def __get_file_format(file_path, dialogues):
-        return file_path + '-%' + '0%d.d' % math.ceil(cmath.log(len(dialogues), 10).real)
+    def __get_log_count_files(d):
+        return math.ceil(cmath.log(len(d), 10).real)
 
-    def __postprocessing(self):
-        pass
+    def __get_file_format(self, file_path, dialogues):
+        return file_path + '-%' + '0%d.d' % self.__get_log_count_files(dialogues)
+
+    def __postprocessing(self, out_file_format, dialogues):
+        count_files = len(dialogues)
+        log_count_files = self.__get_log_count_files(dialogues)
+        for i, dialogue in enumerate(dialogues):
+            out_file = out_file_format % i
 
     def apply(self, path_audio, path_subs):
         path_audio = os.path.abspath(path_audio)
@@ -69,8 +75,11 @@ class AudioCutter:
 
         out_file_format = self.__get_file_format(subs_file_path, dialogues)
         for i, dialogue in enumerate(dialogues):
-            out_file = out_file_format % i
-            self.__write_audio(dialogue, audio, out_file)
-            self.__write_subs(dialogue, out_file)
+            if dialogue.end - dialogue.start < self.__threshold_len:
+                continue
 
-        self.__postprocessing()
+            out_file = out_file_format % i
+            self.__write_subs(dialogue, out_file)
+            self.__write_audio(dialogue, audio, out_file)
+
+        self.__postprocessing(out_file_format, dialogues)
