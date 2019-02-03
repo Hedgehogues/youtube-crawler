@@ -82,12 +82,11 @@ class YoutubeCrawler(BaseCrawler):
     @staticmethod
     def __create_video(video_id, channel_id, full_descr, short_descr):
         subtitles = full_descr['subtitles']
-        valid = short_descr['valid']  # TODO: вынести в crawler из scrapper
-        priority = short_descr['priority']  # TODO: вынести в crawler из scrapper
+        # TODO: заменить на алгоритмы valid и priority
+        valid = True
+        priority = 0
 
         del full_descr['subtitles']
-        del short_descr['valid']
-        del short_descr['priority']
         return {
             'video_id': video_id,
             'channel_id': channel_id,
@@ -100,6 +99,7 @@ class YoutubeCrawler(BaseCrawler):
 
     @staticmethod
     def __create_channel(channel_id, download, preload, descr):
+        # TODO: заменить на алгоритмы valid и priority
         valid = True
         priority = 0
 
