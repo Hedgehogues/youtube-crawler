@@ -9,9 +9,9 @@ class BaseCrawler:
     def __init__(self, logger, max_attempts=5):
         self.__max_attempts = max_attempts
 
-        self.__logger = logger
-        if self.__logger is None:
-            self.__logger = SimpleLogger()
+        self._logger = logger
+        if self._logger is None:
+            self._logger = SimpleLogger()
 
     def _apply(self, fn):
         count = 0
@@ -25,19 +25,19 @@ class BaseCrawler:
         return None, e
 
     def _info(self, msg):
-        self.__logger.info(msg)
+        self._logger.info(msg)
 
     def _warn(self, err_cond, err):
         if err_cond is not None:
-            self.__logger.warn(err)
+            self._logger.warn(err)
 
     def _alert(self, err_cond, err):
         if err_cond is not None:
-            self.__logger.alert(err)
+            self._logger.alert(err)
 
     def _error(self, err_cond, err):
         if err_cond is not None:
-            self.__logger.error(err)
+            self._logger.error(err)
 
 
 class YoutubeCrawler(BaseCrawler):
@@ -60,11 +60,11 @@ class YoutubeCrawler(BaseCrawler):
 
         self.__scraper = scraper
         if self.__scraper is None:
-            self.__init_none_scraper(self.__logger)
+            self.__init_none_scraper()
 
         self.__crash_msg = "Channel from Cache isn't got. %s: [%s]. Crawler interrupts execute..."
 
-    def __init_none_scraper(self, logger):
+    def __init_none_scraper(self):
         loader = Loader()
         reloader = Reloader()
         scrapper = Scrapper(
@@ -75,7 +75,7 @@ class YoutubeCrawler(BaseCrawler):
                 parsers.ChannelsParser(max_page=3),
                 parsers.AboutParser(),
             ],
-            logger=logger
+            logger=self._logger
         )
         self.__scraper = scrapper
 
