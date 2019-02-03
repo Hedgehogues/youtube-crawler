@@ -49,6 +49,9 @@ class AudioCutter:
     def __get_file_format(file_path, dialogues):
         return file_path + '-%' + '0%d.d' % math.ceil(cmath.log(len(dialogues), 10).real)
 
+    def __postprocessing(self):
+        pass
+
     def apply(self, path_audio, path_subs):
         path_audio = os.path.abspath(path_audio)
         path_subs = os.path.abspath(path_subs)
@@ -65,3 +68,5 @@ class AudioCutter:
             out_file = out_file_format % i
             self.__write_audio(dialogue, audio, out_file)
             self.__write_subs(dialogue, out_file)
+
+        self.__postprocessing()
