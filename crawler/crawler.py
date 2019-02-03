@@ -103,14 +103,14 @@ class YoutubeCrawler(BaseCrawler):
         valid = True
         priority = 0
 
-        return [{
+        return {
             'channel_id': channel_id,
             'download': download,
             'priority': priority,
             'valid': valid,
             'preload': preload,
             'full_description': descr,
-        }]
+        }
 
     def __extract_channels(self, descr):
         raise utils.CrawlerExceptions("Not implemented")
@@ -154,7 +154,7 @@ class YoutubeCrawler(BaseCrawler):
 
             self._info("Setting current channel into Cache. ChannelId: %s" % channel_id)
             data = self.__create_channel(channel_id, False, True, descr)
-            err = self.__cache.update_channels(data)
+            err = self.__cache.set_channel(data)
             self._error(err, err + self.__crash_msg % ("ChannelIds", ch_ids_str))
 
             data = self.__extract_channels(descr)
