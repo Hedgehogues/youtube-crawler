@@ -2,6 +2,7 @@ import subprocess
 
 
 class FfmpegWavTranscoder:
+    # TODO: добавить возможность перезаписывать и нет
     def __init__(self):
         self.format = 'wav'
 

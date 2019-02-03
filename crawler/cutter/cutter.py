@@ -18,6 +18,10 @@ class Dialogue:
 
 
 class AudioCutter:
+    # TODO: в некоторых субтитрах есть более детальная разметка (указано какое слово когда должно появляться).
+    # TODO: _1anwjN9tPA
+    # TODO: в некоторых субтитрах есть дублирование. От него требуется избавляться. Кроме того, есть очень маленькие
+    # TODO: добавить возможность перезаписывать и нет
     def __init__(self, wav_transcoder=None):
         self.__out_format = 'wav'
         self.__wav_transcoder = wav_transcoder
