@@ -1,14 +1,17 @@
 from crawler import parsers, utils
 from crawler.cache import DBSqlLiteCache
-from crawler.filter import Filter
 from crawler.loaders import Loader, Reloader, YoutubeDlLoader, Tab
 from crawler.scrapper import Scrapper
+from crawler.simple_logger import SimpleLogger
 
 
 class BaseCrawler:
     def __init__(self, logger, max_attempts=5):
         self.__max_attempts = max_attempts
+
         self.__logger = logger
+        if self.__logger is None:
+            self.__logger = SimpleLogger()
 
     def _apply(self, fn):
         count = 0
@@ -25,13 +28,16 @@ class BaseCrawler:
         self.__logger.info(msg)
 
     def _warn(self, err_cond, err):
-        self.__logger.warn(err_cond is not None, err)
+        if err_cond is not None:
+            self.__logger.warn(err)
 
-    def _allert(self, err_cond, err):
-        self.__logger.allert(err_cond is not None, err)
+    def _alert(self, err_cond, err):
+        if err_cond is not None:
+            self.__logger.alert(err)
 
     def _error(self, err_cond, err):
-        self.__logger.error(err_cond is not None, err)
+        if err_cond is not None:
+            self.__logger.error(err)
 
 
 class YoutubeCrawler(BaseCrawler):
@@ -40,9 +46,9 @@ class YoutubeCrawler(BaseCrawler):
 
     # * TODO: Скрапер обкачивает k видео, а Crawler m из них может отбраковать, после чего не скачает новые k - m видео
 
-    def __init__(self, logger=None, cache=None, ydl_loader=None, scraper=None, videos_per_ch=None, max_attempts=5):
+    def __init__(self, logger=None, cache=None, ydl_loader=None, scraper=None, video_validator=None,
+                 channel_validator=None, max_attempts=5):
         super().__init__(logger, max_attempts)
-        self.__videos_per_ch = videos_per_ch
 
         self.__cache = cache
         if self.__cache is None:
@@ -61,7 +67,6 @@ class YoutubeCrawler(BaseCrawler):
     def __init_none_scraper(self, logger):
         loader = Loader()
         reloader = Reloader()
-        filter = Filter()
         scrapper = Scrapper(
             loader=loader, reloader=reloader,
             parsers=[
@@ -70,8 +75,7 @@ class YoutubeCrawler(BaseCrawler):
                 parsers.ChannelsParser(max_page=3),
                 parsers.AboutParser(),
             ],
-            logger=logger,
-            channel_filter=filter
+            logger=logger
         )
         self.__scraper = scrapper
 
@@ -129,13 +133,13 @@ class YoutubeCrawler(BaseCrawler):
 
             data = self.__create_video(video_id, channel_id, full_video_descr, short_video_descr)
             err = self.__cache.set_video_descr(data)
-            self._allert(err, err)
+            self._alert(err, err)
 
     def process(self, channel_ids=None):
         self._info("Setting channel ids from arguments into Cache")
         err = self.__cache.set_empty_channels(channel_ids)
         ch_ids_str = ','.join(channel_ids)
-        self._allert(err, err + "%s: [%s]" % ("ChannelIds", ch_ids_str))
+        self._alert(err, err + "%s: [%s]" % ("ChannelIds", ch_ids_str))
 
         self._info("Getting first channel from Cache")
         channel_id, err = self.__cache.get_best_channel_id()
