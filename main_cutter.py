@@ -6,7 +6,7 @@ audio_name = '-6RG9SfBkP0'
 out_subtitles = '-6RG9SfBkP0.ru'
 srt = '.srt'
 vtt = '.vtt'
-path = 'data/test/'
+path = 'data/test/videos/'
 
 
 vtt_to_srt(path+out_subtitles+vtt, replace=False)
