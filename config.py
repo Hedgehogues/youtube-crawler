@@ -11,7 +11,7 @@ class Config(object):
     LOG_TO_STDOUT = os.environ.get('LOG_TO_STDOUT')
     ADMINS = ['your-email@example.com']
 
-    TELEGRAM_TOKEN = '640584417:AAH1UW79HK-Nr7IUqvwmeXAbYe9O1kbSXB8'
+    TELEGRAM_TOKEN = '761524778:AAERCT1vyEuNAjB15KcjT8vYpeW0Nq9sZGs'
     PROXY_URL = "http://127.0.0.1:8118"
     PROXYS_URL = "https://127.0.0.1:8118"
 

@@ -1,74 +1,71 @@
 import requests
 import logging
-from logging.handlers import SMTPHandler, RotatingFileHandler
 from logging.handlers import TimedRotatingFileHandler
 import os
 from config import Config
 
 
+log_to_file = "toFile"
+log_to_telegram = "toTelegram"
+
+
+class TelegramHandler(logging.Handler):
+    def emit(self, record):
+        log_entry = self.format(record)
+        return self.send_totelegram(log_entry)
+
+    def send_totelegram(self, message):
+        address = Config.CHAT_ID  # Сообщение придёт в группу
+        address = Config.USER  # Сообщение придёт в бот
+        text = f"Сообщение в Телеграм:\n{message}"
+        proxies = {
+            "http": Config.PROXY_URL,
+            "https": Config.PROXYS_URL,
+        }
+        print(f"TELEGRAM_TOKEN={Config.TELEGRAM_TOKEN}")
+        print(f"v={address}")
+        cont = requests.get(f"https://api.telegram.org/bot{Config.TELEGRAM_TOKEN}"
+                            f"/sendMessage?chat_id={address}&text={text}", proxies=proxies).content
+        return cont
+
+
+
 def init_logging(config_class=Config):
-    print(f"init_logging")
-    # if not appl.debug and not appl.testing:
-    #     print("app_init 2")
-    #     if appl.config['LOG_TO_STDOUT']:
-    #         print("app_init 2.1")
-    #         stream_handler = logging.StreamHandler()
-    #         stream_handler.setLevel(config_class.SERVICES_LOG_LEVEL)
-    #         appl.logger.addHandler(stream_handler)
-    #     else:
-    #         print("app_init 2.2")
-    #         if not os.path.exists('logs'):
-    #             os.mkdir('logs')
-    #         # file_handler = RotatingFileHandler(f'logs/telegramgate_{len(appl.logger.handlers)}.log', maxBytes=10240, backupCount=10)
-    #         file_handler = TimedRotatingFileHandler(f'logs/telegramgate_{len(appl.logger.handlers)}.log', when='H', backupCount=10)
-    #         file_handler.setFormatter(logging.Formatter(
-    #             '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d] %(funcName)s'))
-    #         file_handler.setLevel(config_class.SERVICES_LOG_LEVEL)
-    #         appl.logger.addHandler(file_handler)
-    #
-    #     print("app_init 3")
-    # print(f" logger.handlers.size={len(appl.logger.handlers)}")
-    #
-    # appl.logger.setLevel(config_class.SERVICES_LOG_LEVEL)
-    # appl.logger.info('\tTelegramGate СТАРТ')
-    print("init_logging exit")
+    if not os.path.exists('logs'):
+        os.mkdir('logs')
+    logger = logging.getLogger(log_to_file)
+    logger.setLevel(logging.INFO)
+
+    # Настройка логгера в файл. Логирование будет выполняться в папку log. Имя файла test.log
+    # Каждый час будет создаваться новый файл. (Можно использовать другие стратегии)
+    #  http://python-lab.blogspot.com/2013/03/blog-post.html
+    #  https://docs.python.org/3/library/logging.html#logging.Logger
+    file_handler = TimedRotatingFileHandler(f'logs/test.log', when='H', backupCount=10)
+    file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s %(levelname)s: [in %(pathname)s:%(lineno)d] %(funcName)s  %(message)s'))
+    file_handler.setLevel(config_class.SERVICES_LOG_LEVEL)
+    logger.addHandler(file_handler)
+
+    logger.setLevel(config_class.SERVICES_LOG_LEVEL)
+
+    host = f"api.telegram.org"
+    address = Config.CHAT_ID
+    text = "Ура заработало!!!!"
+    url = f"bot{Config.TELEGRAM_TOKEN}/sendMessage?chat_id={address}&text={text}"
+    telegram_handler = TelegramHandler()
+    telegram_logger = logging.getLogger(log_to_telegram)
+    telegram_logger.addHandler(telegram_handler)
+    telegram_logger.setLevel(logging.INFO)
 
     return
-    # return
 
-
-
-def send_totelegram():
-
-    tg.app.logger.info("totelegramfrom1c")
-    if rq.remote_user is None:
-        remote_user = dbg_user
-    else:
-        remote_user = rq.remote_user
-    user = remote_user.split("@")
-    tg.app.logger.info("totelegramfrom1c")
-    items = rq.args
-    tg.app.logger.debug(f"\titems\n{items}")
-    address = None
-    if "userid" in rq.args.keys():
-        address = rq.args['userid']
-    else:
-        address = tg.app.config['CHAT_ID']
-    text = f"1C документооборот:\n{rq.args['info']}\n{rq.args['message']}"
-    proxies = {
-        "http": tg.app.config['PROXY_URL'],
-        "https": tg.app.config['PROXYS_URL'],
-    }
-    requests.get(f"https://api.telegram.org/bot{tg.app.config['TELEGRAM_TOKEN']}"
-                 f"/sendMessage?chat_id={address}&text={text}", proxies=proxies)
-    response = jsonify(dict())
-    response.status_code = 200
-    return response
-
-
-print("telegrameGate 1")
 
 if __name__ == '__main__':
     print(f" user ID={Config.USER}")
     init_logging(Config)
+    log = logging.getLogger(log_to_file)
+    log_telegram = logging.getLogger(log_to_telegram)
+    log_telegram.info("Привет")
+
+
 
