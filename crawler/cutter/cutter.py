@@ -18,10 +18,16 @@ class Dialogue:
         self.end = end
 
 
+# Требования:
+# * Преобразовывать аудио и субтитры в набор дорожек согласно субтитрам.  Результат требуется положить в
+#   директорию, в этой же папке (по дефолту) или указанную в конструкторе, при инициализации.
+# * Требуется поддерживать произвольный формат субтитров
+# * Требуется поддерживать произвольный формат аудио
+# * Добавить возможность удаления исходных субтитров и видео
+
 class AudioCutter:
     # TODO: в некоторых субтитрах есть более детальная разметка (указано какое слово когда должно появляться)
 
-    # TODO: поддержка различных форматов
     # TODO: добавить возможность перезаписывать и нет
     def __init__(self, wav_transcoder=None, postprocessors=None, audio_fragment_gap=200):
         self.__out_format = 'wav'
@@ -33,17 +39,6 @@ class AudioCutter:
         if self.__postprocessors is None:
             self.__postprocessors = [prc.AudioShorter(), prc.Deduplicator()]
 
-    def __get_dialogues(self, path_subs):
-        with open(path_subs) as fd:
-            dialogues = [Dialogue(sub.content, sub.start, sub.end) for sub in srt.parse(fd.read())]
-        return dialogues
-
-    def __write_audio(self, dialogue, audio, out_file):
-        start = dialogue.start.total_seconds() * 1000 - self.__audio_fragment_gap
-        end = dialogue.end.total_seconds() * 1000 + self.__audio_fragment_gap
-        audio_segment = audio[start:end]
-        audio_segment.export('%s.%s' % (out_file, self.__out_format), format=self.__out_format)
-
     @staticmethod
     def __write_text(dialogue, file_path):
         fd = open(file_path, 'w')
@@ -53,6 +48,18 @@ class AudioCutter:
     @staticmethod
     def __get_log_count_files(d):
         return math.ceil(cmath.log(len(d), 10).real)
+
+    @staticmethod
+    def __get_dialogues(path_subs):
+        with open(path_subs) as fd:
+            dialogues = [Dialogue(sub.content, sub.start, sub.end) for sub in srt.parse(fd.read())]
+        return dialogues
+
+    def __write_audio(self, dialogue, audio, out_file):
+        start = dialogue.start.total_seconds() * 1000 - self.__audio_fragment_gap
+        end = dialogue.end.total_seconds() * 1000 + self.__audio_fragment_gap
+        audio_segment = audio[start:end]
+        audio_segment.export('%s.%s' % (out_file, self.__out_format), format=self.__out_format)
 
     def __get_file_format(self, file_path, dialogues):
         return file_path + '-%' + '0%d.d' % self.__get_log_count_files(dialogues)

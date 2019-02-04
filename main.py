@@ -6,8 +6,6 @@ from crawler import parsers
 
 channel_id = 'UCzAzPC4VWIMHqrnIM1iBPsQ'
 
-
-
 x = YoutubeCrawler()
 x.process(channel_id)
 

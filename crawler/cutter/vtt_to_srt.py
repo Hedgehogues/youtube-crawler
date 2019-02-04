@@ -28,4 +28,3 @@ def vtt_to_srt(vtt_path, replace=True):
         os.remove(vtt_path)
 
     return file_path + srt_ext
-
