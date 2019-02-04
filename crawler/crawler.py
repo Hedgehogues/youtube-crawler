@@ -6,6 +6,7 @@ from crawler.simple_logger import SimpleLogger
 
 
 class BaseCrawler:
+    # TODO: переписать на StateMachine
     def __init__(self, logger, max_attempts=5):
         self.__max_attempts = max_attempts
 
