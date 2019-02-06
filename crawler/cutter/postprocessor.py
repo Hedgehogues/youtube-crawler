@@ -5,9 +5,9 @@ from Levenshtein import distance
 
 
 class Deduplicator:
-    def __init__(self, sorencen=0.08, out_format='wav'):
+    def __init__(self, subs_ext, sorencen=0.08):
         self.__sorencen = sorencen
-        self.__out_format = out_format
+        self.__out_ext = subs_ext
         self.__re = re.compile('[^0-9a-zA-Zа-яА-Я]+')
 
     def __get_intersection(self, cur_sub, prev_sub):
@@ -39,17 +39,20 @@ class Deduplicator:
 
 
 class AudioShorter:
-    def __init__(self, audio_len=0.7, out_format='wav'):
-        self.__audio_len = audio_len
-        self.__out_format = out_format
+    def __init__(self, audio_ext, subs_ext, audio_msec_len=700):
+        self.__audio_msec_len = audio_msec_len
+        self.__audio_ext = audio_ext
+        self.__subs_ext = subs_ext
 
     def apply(self, out_file_format, dialogues):
         for i, dialogue in enumerate(dialogues):
             file = out_file_format % i
-            if not os.path.exists(file):
-                continue
+            if not os.path.exists(file + self.__audio_ext):
+                raise FileNotFoundError("Not found file: %s" % file + self.__audio_ext)
+            if not os.path.exists(file + self.__subs_ext):
+                raise FileNotFoundError("Not found file: %s" % file + self.__subs_ext)
 
-            total_seconds = (dialogue.end - dialogue.start).total_seconds()
-            if total_seconds < self.__audio_len:
-                os.remove('%s.%s' % (file, self.__out_format))
-                os.remove(file)
+            total_mseconds = (dialogue.end - dialogue.start).total_seconds() * 1000
+            if total_mseconds < self.__audio_msec_len:
+                os.remove(file + self.__audio_ext)
+                os.remove(file + self.__subs_ext)
