@@ -6,9 +6,9 @@ import os
 import srt
 from pydub import AudioSegment
 
-from crawler.cutter import validate_ext, srt_ext
+from crawler.cutter import validate_ext
 from crawler.cutter import postprocessor as prc
-from crawler.cutter.transcoder import FfmpegWavTranscoder
+from crawler.cutter.transcoder import FfmpegWavTranscoder, VttToSrtTranscoder
 
 
 class Dialogue:
@@ -29,15 +29,25 @@ class AudioCutter:
     # TODO: в некоторых субтитрах есть более детальная разметка (указано какое слово когда должно появляться)
 
     # TODO: добавить возможность перезаписывать и нет
-    def __init__(self, wav_transcoder=None, postprocessors=None, audio_fragment_gap=200):
-        self.__out_format = 'wav'
-        self.__audio_fragment_gap = audio_fragment_gap
-        self.__wav_transcoder = wav_transcoder
-        if self.__wav_transcoder is None:
-            self.__wav_transcoder = FfmpegWavTranscoder()
+    def __init__(self, subs_transcoder=None, audio_transcoder=None, postprocessors=None, out_dir_name='./cutter',
+                 audio_fragment_gap=200):
+        self.__audio_transcoder = audio_transcoder
+        if self.__audio_transcoder is None:
+            self.__audio_transcoder = FfmpegWavTranscoder()
+
         self.__postprocessors = postprocessors
         if self.__postprocessors is None:
             self.__postprocessors = [prc.AudioShorter(), prc.Deduplicator()]
+
+        self.__subs_transcoder = subs_transcoder
+        if self.__subs_transcoder is None:
+            self.__subs_transcoder = VttToSrtTranscoder()
+
+        self.__audio_fragment_gap = audio_fragment_gap
+        self.__cut_dir_name = out_dir_name
+
+        self.__sub_ext = ".srt"
+        self.__audio_ext = ".wav"
 
     @staticmethod
     def __write_text(dialogue, file_path):
@@ -59,21 +69,27 @@ class AudioCutter:
         start = dialogue.start.total_seconds() * 1000 - self.__audio_fragment_gap
         end = dialogue.end.total_seconds() * 1000 + self.__audio_fragment_gap
         audio_segment = audio[start:end]
-        audio_segment.export('%s.%s' % (out_file, self.__out_format), format=self.__out_format)
+        audio_segment.export('%s.%s' % (out_file, self.__audio_ext), format=self.__audio_ext)
 
     def __get_file_format(self, file_path, dialogues):
         return file_path + '-%' + '0%d.d' % self.__get_log_count_files(dialogues)
 
+    def __create_dirs(self):
+        if not os.path.exists(self.__cut_dir_name):
+            os.makedirs(self.__cut_dir_name)
+
     def apply(self, path_audio, path_subs):
-        path_audio = os.path.abspath(path_audio)
         path_subs = os.path.abspath(path_subs)
-
-        subs_file_path = validate_ext(path_subs, srt_ext)
-
+        subs_file_path = validate_ext(path_subs, self.__sub_ext)
+        self.__subs_transcoder.apply(path_subs)
         dialogues = self.__get_dialogues(path_subs)
 
-        self.__wav_transcoder.apply(path_audio)
+        path_audio = os.path.abspath(path_audio)
+        validate_ext(path_subs, self.__audio_ext)
+        self.__audio_transcoder.apply(path_audio)
         audio = AudioSegment.from_wav(path_audio)
+
+        self.__create_dirs()
 
         out_file_format = self.__get_file_format(subs_file_path, dialogues)
         for i, dialogue in enumerate(dialogues):

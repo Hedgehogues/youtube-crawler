@@ -1,10 +1,6 @@
 import os
 from crawler import utils
 
-vtt_ext = ".vtt"
-srt_ext = ".srt"
-wav_ext = '.wav'
-
 
 def validate_ext(vvt_path, ext):
     file_path, file_ext = os.path.splitext(vvt_path)

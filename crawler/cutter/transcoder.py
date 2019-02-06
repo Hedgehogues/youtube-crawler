@@ -10,12 +10,12 @@ from crawler.cutter import validate_ext
 class FfmpegWavTranscoder:
     # TODO: добавить возможность перезаписывать и нет
     def __init__(self):
-        self.format = 'wav'
+        self.__ext = '.wav'
 
     def apply(self, audio_name):
-        cmd = ['ffmpeg', '-loglevel', 'panic', '-i', audio_name, audio_name+'X.'+self.format]
+        cmd = ['ffmpeg', '-loglevel', 'panic', '-i', audio_name, audio_name +'X' + self.__ext]
         subprocess.call(cmd)
-        cmd = ['mv', audio_name+'X.'+self.format, audio_name]
+        cmd = ['mv', audio_name +'X' + self.__ext, audio_name]
         subprocess.call(cmd)
 
 
@@ -26,8 +26,8 @@ class FfmpegWavTranscoder:
 class VttToSrtTranscoder:
     def __init__(self, suffix='', vtt_reader=None):
         self.__suffix = suffix
-        self.__out_ext = 'srt'
-        self.__in_ext = 'vtt'
+        self.__out_ext = '.srt'
+        self.__in_ext = '.vtt'
 
         self.__vtt_reader = vtt_reader
         if self.__vtt_reader is None:

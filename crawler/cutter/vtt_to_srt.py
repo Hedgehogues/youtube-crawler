@@ -4,7 +4,7 @@ from webvtt import WebVTT
 import html
 from pysrt.srtitem import SubRipItem
 from pysrt.srttime import SubRipTime
-from crawler.cutter import validate_ext, srt_ext, vtt_ext
+from crawler.cutter import validate_ext
 
 
 def __write_srt(fd_srt, path):
