@@ -3,8 +3,7 @@ import os
 
 from webvtt import WebVTT
 import html
-from pysrt.srtitem import SubRipItem
-from pysrt.srttime import SubRipTime
+from pysrt.srtitem import SubRipItem, SubRipTime
 from crawler.cutter import validate_ext
 
 
@@ -29,6 +28,7 @@ class VttToSrtTranscoder:
         self.__suffix = suffix
         self.__out_ext = 'srt'
         self.__in_ext = 'vtt'
+
         self.__vtt_reader = vtt_reader
         if self.__vtt_reader is None:
             self.__vtt_reader = WebVTT()
