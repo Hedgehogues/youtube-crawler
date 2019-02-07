@@ -87,7 +87,7 @@ class AudioCutter:
     def __get_abs_out_dir(path_cutter):
         abs_path_cutter = '%s/' % os.path.abspath(path_cutter)
         if len(abs_path_cutter) == 0:
-            raise FileExistsError("Path not found: %s", abs_path_cutter)
+            raise FileNotFoundError("Path not found: %s", abs_path_cutter)
         return abs_path_cutter
 
     def __create_dialogues(self, path_subs):
