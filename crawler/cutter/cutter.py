@@ -70,7 +70,7 @@ class AudioCutter:
         return dialogues
 
     def __write_audio(self, dialogue, audio, out_file):
-        start = dialogue.start.total_seconds() * 1000 - self.__audio_fragment_gap
+        start = max(0, dialogue.start.total_seconds() * 1000 - self.__audio_fragment_gap)
         end = dialogue.end.total_seconds() * 1000 + self.__audio_fragment_gap
         audio_segment = audio[start:end]
         audio_segment.export(out_file + self.__audio_ext, format=self.__audio_ext[1:])
