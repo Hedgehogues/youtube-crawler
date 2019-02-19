@@ -1,10 +1,9 @@
 import json
 from copy import deepcopy
 from enum import Enum
-import requests
 import youtube_dl
 
-from crawler import utils
+from crawler import utils, requests
 
 
 class Tab(Enum):
@@ -16,7 +15,8 @@ class Tab(Enum):
 
 class BaseLoader:
     def __init__(self):
-        user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
+        user_agent = \
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
         cache_control = 'no-cache'
         x_youtube_client_name = '1'
         x_youtube_client_version = '2.20190124'
