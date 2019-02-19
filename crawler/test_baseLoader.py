@@ -43,7 +43,12 @@ class TestBaseLoader(unittest.TestCase):
         self.method = 'GET'
 
     def test__get_resp_text_0(self):
+        """
+        This test checks correct answer for get-request
+        :return:
+        """
         self.headers = {}
+        self.method = 'GET'
         loaders.requests = MockRequests(
             answ=self.answ, url=self.url, params=self.params, headers=self.headers, method=self.method
         )
@@ -53,6 +58,10 @@ class TestBaseLoader(unittest.TestCase):
         self.assertEqual(resp_text, self.answ)
 
     def test__get_resp_text_1(self):
+        """
+        This test checks correct answer for post-request
+        :return:
+        """
         self.headers = {}
         self.method = 'POST'
         loaders.requests = MockRequests(
@@ -64,6 +73,10 @@ class TestBaseLoader(unittest.TestCase):
         self.assertEqual(resp_text, self.answ)
 
     def test__get_resp_text_3(self):
+        """
+        This test checks exception generate
+        :return:
+        """
         self.method = 'POST'
         loaders.requests = MockRequests(
             answ=self.answ, url=self.url, params=self.params, headers=self.headers, method=self.method
