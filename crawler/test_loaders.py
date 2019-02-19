@@ -3,7 +3,7 @@ import unittest
 from collections import namedtuple
 
 from crawler import utils
-from crawler.loaders import BaseLoader
+from crawler.loaders import BaseLoader, Tab
 import crawler.loaders as loaders
 
 
@@ -48,6 +48,74 @@ class TestLoaderBaseClass(unittest.TestCase):
 
         loaders.requests = MockRequests(
             answ=self.answ, url=self.url, params=self.params, headers=self.headers, method=self.method
+        )
+
+
+class TestLoader(TestLoaderBaseClass):
+
+    def test_load_0(self):
+        """
+        This test checks player config and data config were VALID
+        :return:
+        """
+        data_config_str = '{"responseContext":{"player": true, "data": false}}'
+        player_config_str = '{"responseContext":{"player": true, "data": false}}'
+        self.answ = '''  <script >
+          window["ytInitialData"] = %s;
+          window["ytInitialPlayerResponse"] = (
+              %s);
+          if (window.ytcsi) {window.ytcsi.tick("pdr", null, '')}
+        </script>        ''' % (data_config_str, player_config_str)
+        loaders.requests.answ = self.answ
+
+        channel_id = 'test_channel'
+        tab = Tab.HomePage
+        loaders.requests.url = 'https://www.youtube.com/channel/%s/%s' % (channel_id, tab.value)
+        player_config, data_config = loaders.Loader().load(channel_id=channel_id, tab=tab, query_params=self.params)
+        self.assertEqual(data_config, json.loads(data_config_str))
+        self.assertEqual(player_config, json.loads(player_config_str))
+
+    def test_load_1(self):
+        """
+        This test checks player config is INVALID
+        :return:
+        """
+        data_config_str = '{"responseContext":{"player": true, "data": false}}'
+        self.answ = '''  <script >
+          window["ytInitialData"] = %s;
+          if (window.ytcsi) {window.ytcsi.tick("pdr", null, '')}
+        </script>        ''' % data_config_str
+        loaders.requests.answ = self.answ
+
+        channel_id = 'test_channel'
+        tab = Tab.HomePage
+        loaders.requests.url = 'https://www.youtube.com/channel/%s/%s' % (channel_id, tab.value)
+        self.assertRaises(
+            utils.JsonSerializableError,
+            loaders.Loader().load,
+            channel_id=channel_id, tab=tab, query_params=self.params
+        )
+
+    def test_load_4(self):
+        """
+        This test checks json of data config is INVALID
+        :return:
+        """
+        player_config_str = '{"responseContext":{"player": true, "data": false}}'
+        self.answ = '''  <script >
+          window["ytInitialPlayerResponse"] = (
+              %s);
+          if (window.ytcsi) {window.ytcsi.tick("pdr", null, '')}
+        </script>        ''' % player_config_str
+        loaders.requests.answ = self.answ
+
+        channel_id = 'test_channel'
+        tab = Tab.HomePage
+        loaders.requests.url = 'https://www.youtube.com/channel/%s/%s' % (channel_id, tab.value)
+        self.assertRaises(
+            utils.JsonSerializableError,
+            loaders.Loader().load,
+            channel_id=channel_id, tab=tab, query_params=self.params
         )
 
 
@@ -104,6 +172,8 @@ class TestReloader(TestLoaderBaseClass):
         """
         This test checks correct loading next page with VALID json.
         Token was not found - 2.
+          window["ytInitialData"] = %s;
+
         :return:
         """
         loaders.requests.url = 'https://www.youtube.com/browse_ajax/'

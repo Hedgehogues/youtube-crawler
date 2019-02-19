@@ -79,25 +79,26 @@ class Loader(BaseLoader):
 
         return player_config, data_config
 
+    @staticmethod
+    def __extractor(text, config):
+        start_ind = text.find(config)+len(config)
+        finish_ind = start_ind + text[start_ind:].find(';\n')
+        config = text[start_ind:finish_ind]
+        return config
+
     def __get_data_config(self, text):
-        try:
-            start_ind = text.find(self.data_config)+len(self.data_config)
-            finish_ind = start_ind + text[start_ind:].find(';\n')
-            config = text[start_ind:finish_ind]
-        except Exception as e:
-            raise utils.JsonExtractionError("Data config extraction is failed", e)
+        start_ind = text.find(self.data_config)+len(self.data_config)
+        finish_ind = start_ind + text[start_ind:].find(';\n')
+        config = text[start_ind:finish_ind]
         try:
             return json.loads(config)
         except Exception as e:
             raise utils.JsonSerializableError("Data config serialize is failed", e)
 
     def __get_player_config(self, text):
-        try:
-            start_ind = text.find(self.player_config)+len(self.player_config)
-            finish_ind = start_ind + text[start_ind:].find(');\n')
-            config = text[start_ind:finish_ind]
-        except Exception as e:
-            raise utils.JsonExtractionError("Player config extraction is failed", e)
+        start_ind = text.find(self.player_config)+len(self.player_config)
+        finish_ind = start_ind + text[start_ind:].find(');\n')
+        config = text[start_ind:finish_ind]
         try:
             return json.loads(config)
         except Exception as e:
