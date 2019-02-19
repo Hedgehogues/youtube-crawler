@@ -4,6 +4,7 @@ from enum import Enum
 import youtube_dl
 
 from crawler import utils, requests
+from crawler.utils import ReloadTokenError
 
 
 class Tab(Enum):
@@ -45,6 +46,10 @@ class Reloader(BaseLoader):
         self._base_url = 'https://www.youtube.com/browse_ajax/'
 
     def load(self, next_page_token):
+        if len(next_page_token['ctoken']) == 0:
+            raise ReloadTokenError("ctoken length equal 0")
+        if len(next_page_token['itct']) == 0:
+            raise ReloadTokenError("itct length equal 0")
         headers = deepcopy(self._headers)
         query_params = {
             'ctoken': next_page_token['ctoken'],
