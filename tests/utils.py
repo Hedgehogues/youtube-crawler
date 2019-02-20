@@ -8,7 +8,7 @@ class BaseTestClass(unittest.TestCase):
         super(BaseTestClass, self).__init__(*args, **kwargs)
         self.tests = []
 
-    def _apply_test(self, i):
+    def _apply_test(self, i, func):
         kwargs = self.tests[i].args
         want = self.tests[i].want
         obj = self.tests[i].object
@@ -16,12 +16,12 @@ class BaseTestClass(unittest.TestCase):
         msg = self._create_msg(i)
         with self.subTest(i=i, msg=msg):
             if exception is None:
-                res = obj.parse(**kwargs)
+                res = func(obj, kwargs)
                 self.assertEqual(want, res, msg=msg)
                 return
             is_exception = False
             try:
-                obj.parse(**kwargs)
+                func(obj, kwargs)
             except Exception as e:
                 is_exception = True
                 self.assertEqual(type(e), exception)
