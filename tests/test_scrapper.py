@@ -1,10 +1,9 @@
-import json
 from collections import Counter
 from enum import Enum
-import unittest
 
 from crawler.scrapper import Scrapper
-from internal.utils_test import BaseTestClass, SubTest
+from tests import MockLogger
+from tests.utils import BaseTestClass, SubTest
 
 
 class MockTab(Enum):
@@ -62,20 +61,6 @@ class MockParser:
 
     def reload_parse(self, data_config):
         return {'data_config': data_config}, data_config['Token']
-
-
-class MockLogger:
-    def info(self, msg):
-        pass
-
-    def warn(self, err):
-        pass
-
-    def alert(self, err):
-        pass
-
-    def error(self, err):
-        raise Exception
 
 
 class TestScrapper(BaseTestClass):
