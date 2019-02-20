@@ -65,7 +65,11 @@ class MockParser:
 
 class TestScrapper(BaseTestClass):
     """
-    Token save information about next page
+    Token stores information about next page. We have loader and reloader
+    which connect to server. Server has limited available pages. If server
+    still has pages yet, then it return token else server return None.
+    This token send to reloader and reloader return new page with token or
+    not.
     """
 
     @staticmethod
