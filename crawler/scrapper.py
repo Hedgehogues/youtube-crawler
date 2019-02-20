@@ -17,13 +17,11 @@ class Scrapper:
     """
     def __init__(self, loader, reloader, parsers=None, logger=None):
 
-        self._parsers = parsers if parsers is not None else []
-        self._reloader = reloader
-        self._loader = loader
-
-        self._logger = logger
-
-        self._query_params = {
+        self.parsers = parsers if parsers is not None else []
+        self.reloader = reloader
+        self.loader = loader
+        self.logger = logger
+        self.query_params = {
             Tab.HomePage: None,
             Tab.Videos: {'flow': 'grid', 'view': '0'},
             Tab.Channels: {'flow': 'grid', 'view': '56'},
@@ -34,18 +32,18 @@ class Scrapper:
         count_pages = 1
         descr_slice = []
         while (p.max_page is None or count_pages < p.max_page) and next_page_token is not None:
-            # TODO: добавить логгирование
             count_pages += 1
-            data_config = self._reloader.load(next_page_token)
+            data_config = self.reloader.load(next_page_token)
             descr, next_page_token = p.reload_parse(data_config)
-            descr_slice += descr
+            descr_slice.append(descr)
         return descr_slice
 
     def parse(self, channel_id):
-        # TODO: добавить логгирование
-        descr = {}
-        for p in self._parsers:
-            player_config, data_config = self._loader.load(channel_id, p.tab, self._query_params[p.tab])
+        descrs = {}
+        for p in self.parsers:
+            self.logger.info("Loading: %s" % p.tab.value)
+            player_config, data_config = self.loader.load(channel_id, p.tab, self.query_params[p.tab])
+            self.logger.info("Loading was finished: %s" % p.tab.value)
             descr, next_page_token = p.parse(player_config, data_config)
-            descr[p.tab] = descr + self.__reload_pages(p, next_page_token)
-        return descr
+            descrs[p.tab] = [descr] + self.__reload_pages(p, next_page_token)
+        return descrs
