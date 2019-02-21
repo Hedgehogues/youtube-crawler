@@ -6,6 +6,9 @@ from pysrt import srttime
 
 from crawler import utils
 
+# For tests
+open = open
+
 
 class VTTtoSRT:
     __vtt = ".vtt"
