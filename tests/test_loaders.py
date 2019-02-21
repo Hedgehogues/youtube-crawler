@@ -40,9 +40,9 @@ class TestLoaderBaseClass(unittest.TestCase):
             'x-youtube-client-version': x_youtube_client_version,
         }
 
-        self.url = 'https://test.ru'
+        self.url = 'https://data.ru'
         self.answ = '{"Ok": true}'
-        self.params = {'test': 'test'}
+        self.params = {'data': 'data'}
         self.headers = headers
         self.method = 'GET'
 
@@ -55,7 +55,7 @@ class TestLoader(TestLoaderBaseClass):
 
     def test_load_0(self):
         """
-        This test checks player config and data config were VALID
+        This data checks player config and data config were VALID
         :return:
         """
         data_config_str = '{"responseContext":{"player": true, "data": false}}'
@@ -77,7 +77,7 @@ class TestLoader(TestLoaderBaseClass):
 
     def test_load_1(self):
         """
-        This test checks player config is INVALID
+        This data checks player config is INVALID
         :return:
         """
         data_config_str = '{"responseContext":{"player": true, "data": false}}'
@@ -98,7 +98,7 @@ class TestLoader(TestLoaderBaseClass):
 
     def test_load_4(self):
         """
-        This test checks json of data config is INVALID
+        This data checks json of data config is INVALID
         :return:
         """
         player_config_str = '{"responseContext":{"player": true, "data": false}}'
@@ -123,7 +123,7 @@ class TestReloader(TestLoaderBaseClass):
 
     def test_load_0(self):
         """
-        This test checks correct loading next page with VALID json.
+        This data checks correct loading next page with VALID json.
         Token was found and token CORRECT.
         :return:
         """
@@ -139,7 +139,7 @@ class TestReloader(TestLoaderBaseClass):
 
     def test_load_1(self):
         """
-        This test checks correct loading next page with INVALID json.
+        This data checks correct loading next page with INVALID json.
         Token was found and token CORRECT.
         :return:
         """
@@ -155,7 +155,7 @@ class TestReloader(TestLoaderBaseClass):
 
     def test_load_2(self):
         """
-        This test checks correct loading next page with VALID json.
+        This data checks correct loading next page with VALID json.
         Token was not found - 1.
         :return:
         """
@@ -170,7 +170,7 @@ class TestReloader(TestLoaderBaseClass):
 
     def test_load_3(self):
         """
-        This test checks correct loading next page with VALID json.
+        This data checks correct loading next page with VALID json.
         Token was not found - 2.
           window["ytInitialData"] = %s;
 
@@ -190,7 +190,7 @@ class TestBaseLoader(TestLoaderBaseClass):
 
     def test__get_resp_text_0(self):
         """
-        This test checks correct answer for get-request. Empty header
+        This data checks correct answer for get-request. Empty header
         :return:
         """
         self.headers = {}
@@ -205,7 +205,7 @@ class TestBaseLoader(TestLoaderBaseClass):
 
     def test__get_resp_text_1(self):
         """
-        This test checks correct answer for post-request. Empty header
+        This data checks correct answer for post-request. Empty header
         :return:
         """
         self.headers = {}
@@ -220,7 +220,7 @@ class TestBaseLoader(TestLoaderBaseClass):
 
     def test__get_resp_text_3(self):
         """
-        This test checks exception generate. Fill header
+        This data checks exception generate. Fill header
         :return:
         """
         self.method = 'POST'

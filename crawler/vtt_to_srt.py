@@ -6,13 +6,13 @@ from pysrt import srttime
 
 from crawler import utils
 
-# For tests
-open = open
-
 
 class VTTtoSRT:
     __vtt = ".vtt"
     __srt = ".srt"
+
+    def __init__(self, prefix=''):
+        self.prefix = prefix
 
     @staticmethod
     def __write_srt(fd_srt, path):
@@ -24,14 +24,13 @@ class VTTtoSRT:
             item = srtitem.SubRipItem(index, start, end, html.unescape(caption.text))
             fd_srt.write("%s\n" % str(item))
 
-    def transform(self, vvt_path):
-
-        file_path, file_ext = os.path.splitext(vvt_path)
+    def transform(self, vtt_path):
+        file_path, file_ext = os.path.splitext(vtt_path)
         path, file_name = os.path.split(file_path)
 
         if not file_ext.lower() == self.__vtt:
-            utils.ExtensionError(self.__vtt, "Path to file: %s" % vvt_path)
+            utils.ExtensionError(self.__vtt, "Path to file: %s" % vtt_path)
             return
 
-        with open(path + file_name + self.__srt, "w") as fd_srt:
-            self.__write_srt(fd_srt, vvt_path)
+        with open('%s/%s%s%s' % (path, self.prefix, file_name, self.__srt), "w") as fd_srt:
+            self.__write_srt(fd_srt, vtt_path)

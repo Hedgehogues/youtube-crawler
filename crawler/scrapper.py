@@ -2,20 +2,21 @@ from crawler.loaders import Tab
 
 
 class Scrapper:
-    """
-    Scrapper download concrete channel with (or without video) from Youtube.
 
-    loader : crawler.loaders.Loader
-        This object must satisfy the interface `crawler.loaders.Loader`.
-        Loader download and extract json with data from next pages:
-            * featured
-            * videos
-            * channels
-            * about
-            * TODO: community
-        If you want to add new pages, you should be add new constants int crawler.loaders.Tab
-    """
     def __init__(self, loader, reloader, parsers=None, logger=None):
+        """
+            Scrapper download concrete channel with (or without video) from Youtube.
+
+            :param loader (object) : crawler.loaders.Loader
+                This object must satisfy the interface `crawler.loaders.Loader`.
+                Loader download and extract json with data from next pages:
+                    * featured
+                    * videos
+                    * channels
+                    * about
+                    * TODO: community
+                If you want to add new pages, you should be add new constants int crawler.loaders.Tab
+        """
 
         self.parsers = parsers if parsers is not None else []
         self.reloader = reloader

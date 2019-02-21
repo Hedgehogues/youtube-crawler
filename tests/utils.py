@@ -9,7 +9,9 @@ class BaseTestClass(unittest.TestCase):
 
     def __middleware(self, mws):
         for mw in mws:
-            mw()
+            res = mw()
+            if res is not None:
+                self.assertTrue(res)
 
     def __valid(self, obj, kwargs, func, want, msg):
         res = func(obj, kwargs)
@@ -40,14 +42,33 @@ class BaseTestClass(unittest.TestCase):
 
 
 class SubTest:
+
+    """
+    Table data for object. If you want data single function, you can use closure (lambda wrapper)
+
+    :param name (str): name of data
+    :param args (dict): arguments tested function
+    :param description (str): description of data
+    :param object (object): description of data
+    :param want (object): wanted answer from function
+    :param exception (Exception): exception of data case or None (if exception is not raises)
+    :param middlewares_before (list): list of middlewares functions which execute before start data.
+        Each function must return True if all right or False another case. If function return None,
+        than it means all right.
+    :param middlewares_before (list): list of middlewares functions which execute after finished data.
+        Each function must return True if all right or False another case. If function return None,
+        than it means all right.
+    self.configuration = self.fill('configure_', {}, kwargs)
+    """
+
     def __init__(self, **kwargs):
-        # Name of test
-        self.name = self.fill('name', 'Test', kwargs)
-        # Description of test
-        self.description = self.fill('description', '', kwargs)
+        # Name of data
+        self.name = self.fill('name', 'Default name test', kwargs)
+        # Description of data
+        self.description = self.fill('description', None, kwargs)
         # Arguments tested function
         self.args = self.fill('args', {}, kwargs)
-        # Test function (need lambda wrapper) or test method of object
+        # Test function (need lambda wrapper) or data method of object
         self.object = kwargs['object']
         # Wanted answer
         self.want = self.fill('want', None, kwargs)
@@ -55,7 +76,7 @@ class SubTest:
         self.exception = self.fill('exception', None, kwargs)
         self.middlewares_before = self.fill('middlewares_before', [], kwargs)
         self.middlewares_after = self.fill('middlewares_after', [], kwargs)
-        self.configuration = self.fill('configure_', {}, kwargs)
+        self.configuration = self.fill('configure_', None, kwargs)
 
     @staticmethod
     def fill(k, r, kwargs):
@@ -67,6 +88,6 @@ class SubTest:
         msg = ''
         if descr is not None:
             msg += 'Description: %s. ' % descr
-        if descr is not None:
+        if conf is not None:
             msg += 'Configuration: %s. ' % conf
         return msg
