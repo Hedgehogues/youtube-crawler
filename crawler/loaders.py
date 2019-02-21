@@ -1,9 +1,10 @@
 import json
+import requests
 from copy import deepcopy
 from enum import Enum
 import youtube_dl
 
-from crawler import utils, requests
+from crawler import utils
 from crawler.utils import ReloadTokenError
 
 

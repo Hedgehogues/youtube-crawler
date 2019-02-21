@@ -36,6 +36,14 @@ class ReloadTokenError(CrawlerExceptions):
         super().__init__(msg, e)
 
 
+class ParserError(CrawlerExceptions):
+    """
+    Problem while parsing response
+    """
+    def __init__(self, msg, e=None):
+        super().__init__(msg, e)
+
+
 class JsonExtractionError(CrawlerExceptions):
     """Json with data not found in a page. This exception is generated of Scrapper
 

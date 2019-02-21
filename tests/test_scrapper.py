@@ -1,15 +1,8 @@
 from collections import Counter
-from enum import Enum
 
 from crawler.scrapper import Scrapper
-from tests import MockLogger
+from tests import MockLogger, MockTab
 from tests.utils import BaseTestClass, SubTest
-
-
-class MockTab(Enum):
-    TEST0 = "test0"
-    TEST1 = "test1"
-    TEST2 = "test2"
 
 
 class MockClientServer:

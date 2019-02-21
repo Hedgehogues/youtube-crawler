@@ -1,5 +1,7 @@
-from crawler import jq
+from jq import jq
+from crawler import utils
 from crawler.loaders import Tab
+from crawler.utils import ReloadTokenError
 
 
 class BaseParser:
@@ -14,12 +16,14 @@ class BaseParser:
             raise AttributeError("Attribute max_page must be more 0")
         self.max_page = max_page
         with open(jq_path) as fd_fq:
-            self._jq_load = jq.jq(fd_fq.read())
+            self._jq_load = jq(fd_fq.read())
 
     def is_final_page(self):
         return True
 
-    def parse(self, data_config):
+    def parse(self, data_config, is_reload):
+        if is_reload:
+            raise ReloadTokenError("This parser not implement reload options. Token cannot be received")
         data = self._jq_load.transform(data_config)
         return data, None
 
@@ -34,11 +38,11 @@ class ReloaderParser(BaseParser):
         :param jq_load_path (str): path to jq-script of load data
         :param jq_reload_path (str): path to jq-script of reload data
         """
-        super().__init__(max_page, jq_load_path)
+        super().__init__(max_page=max_page, jq_path=jq_load_path)
 
         self.__count_pages = 0
         with open(jq_reload_path) as fd_fq:
-            self._jq_reload = jq.jq(fd_fq.read())
+            self._jq_reload = jq(fd_fq.read())
         self.next_page_token = None
         self.tab = tab
 
@@ -48,11 +52,14 @@ class ReloaderParser(BaseParser):
     def parse(self, data_config, is_reload):
         self.__count_pages += 1
         data = self._jq_load.transform(data_config)
-        itct = data['next_page_token']['itct']
-        next_page_descr = data['next_page_token']['ctoken']
-        if next_page_descr is not None and itct is not None:
+        try:
+            itct = data['next_page_token']['itct']
+            next_page_token = data['next_page_token']['ctoken']
+        except Exception as e:
+            raise utils.ParserError("Next page token is not available", e)
+        if next_page_token is not None and itct is not None:
             return data[self.tab], {
-                'ctoken': next_page_descr,
+                'ctoken': next_page_token,
                 'itct':  itct,
             }
         return data[self.tab], None
