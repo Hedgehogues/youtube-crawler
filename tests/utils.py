@@ -29,19 +29,19 @@ class BaseTestClass(unittest.TestCase):
             self.assertEqual(type(e), exception)
         self.assertTrue(is_exception)
 
-    def apply_test(self, i, func):
-        kwargs = self.tests_parse[i].args
-        want = self.tests_parse[i].want
-        obj = self.tests_parse[i].object
-        exception = self.tests_parse[i].exception
-        msg = self.tests_parse[i].create_msg()
-        with self.subTest(i=i, msg=msg):
-            self.__middleware(self.tests_parse[i].middlewares_before)
+    def apply_test(self, test, func):
+        kwargs = test.args
+        want = test.want
+        obj = test.object
+        exception = test.exception
+        msg = test.create_msg()
+        with self.subTest(msg=msg):
+            self.__middleware(test.middlewares_before)
             if exception is None:
                 self.__valid(obj, kwargs, func, want, msg)
             else:
                 self.__exception(obj, kwargs, exception, func)
-            self.__middleware(self.tests_parse[i].middlewares_after)
+            self.__middleware(test.middlewares_after)
 
 
 class SubTest:

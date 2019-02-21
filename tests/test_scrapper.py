@@ -332,6 +332,5 @@ class TestScrapper(BaseTestClass):
         ]
 
     def test_parse(self):
-        for i in range(len(self.tests)):
-            func = lambda obj, kwargs: obj.parse(**kwargs)
-            self.apply_test(i, func)
+        for test in self.tests:
+            self.apply_test(test, lambda obj, kwargs: obj.parse(**kwargs))
