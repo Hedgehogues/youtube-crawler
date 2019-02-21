@@ -52,14 +52,13 @@ class MockParser:
     def __init__(self, tab, max_pages):
         self.tab = tab
         self.max_page = max_pages
+        self.__count_pages = 0
 
-    def parse(self, player_config, data_config):
-        return {
-                   'player_config': player_config,
-                   'data_config': data_config,
-               }, data_config['Token']
+    def is_final_page(self):
+        return not (self.max_page is None or self.__count_pages < self.max_page)
 
-    def reload_parse(self, data_config):
+    def parse(self, data_config):
+        self.__count_pages += 1
         return {'data_config': data_config}, data_config['Token']
 
 
@@ -114,7 +113,7 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'player_config': {'Player': True}, 'data_config': {'Load': True, 'Token': None}}
+                        {'data_config': {'Load': True, 'Token': None}}
                     ]
                 },
                 exception=None,
@@ -130,7 +129,7 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'player_config': {'Player': True}, 'data_config': {'Load': True, 'Token': None}}
+                        {'data_config': {'Load': True, 'Token': None}}
                     ]
                 },
                 exception=None,
@@ -146,7 +145,7 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'player_config': {'Player': True}, 'data_config': {'Load': True, 'Token': MockTab.TEST0}},
+                        {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
                         {'data_config': {'Load': True, 'Token': None}},
                     ]
                 },
@@ -163,7 +162,7 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'player_config': {'Player': True}, 'data_config': {'Load': True, 'Token': MockTab.TEST0}},
+                        {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
                         {'data_config': {'Load': True, 'Token': None}},
                     ]
                 },
@@ -180,7 +179,7 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'player_config': {'Player': True}, 'data_config': {'Load': True, 'Token': MockTab.TEST0}},
+                        {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
                         {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
                     ]
                 },
@@ -198,10 +197,10 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'player_config': {'Player': True}, 'data_config': {'Load': True, 'Token': None}},
+                        {'data_config': {'Load': True, 'Token': None}},
                     ],
                     MockTab.TEST1: [
-                        {'player_config': {'Player': True}, 'data_config': {'Load': True, 'Token': None}},
+                        {'data_config': {'Load': True, 'Token': None}},
                     ]
                 },
                 exception=None,
@@ -217,10 +216,10 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'player_config': {'Player': True}, 'data_config': {'Load': True, 'Token': None}}
+                        {'data_config': {'Load': True, 'Token': None}}
                     ],
                     MockTab.TEST1: [
-                        {'player_config': {'Player': True}, 'data_config': {'Load': True, 'Token': None}}
+                        {'data_config': {'Load': True, 'Token': None}}
                     ]
                 },
                 exception=None,
@@ -236,11 +235,11 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'player_config': {'Player': True}, 'data_config': {'Load': True, 'Token': MockTab.TEST0}},
+                        {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
                         {'data_config': {'Load': True, 'Token': None}},
                     ],
                     MockTab.TEST1: [
-                        {'player_config': {'Player': True}, 'data_config': {'Load': True, 'Token': MockTab.TEST1}},
+                        {'data_config': {'Load': True, 'Token': MockTab.TEST1}},
                         {'data_config': {'Load': True, 'Token': None}},
                     ]
                 },
@@ -257,11 +256,11 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'player_config': {'Player': True}, 'data_config': {'Load': True, 'Token': MockTab.TEST0}},
+                        {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
                         {'data_config': {'Load': True, 'Token': None}},
                     ],
                     MockTab.TEST1: [
-                        {'player_config': {'Player': True}, 'data_config': {'Load': True, 'Token': MockTab.TEST1}},
+                        {'data_config': {'Load': True, 'Token': MockTab.TEST1}},
                         {'data_config': {'Load': True, 'Token': None}},
                     ]
                 },
@@ -278,11 +277,11 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'player_config': {'Player': True}, 'data_config': {'Load': True, 'Token': MockTab.TEST0}},
+                        {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
                         {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
                     ],
                     MockTab.TEST1: [
-                        {'player_config': {'Player': True}, 'data_config': {'Load': True, 'Token': MockTab.TEST1}},
+                        {'data_config': {'Load': True, 'Token': MockTab.TEST1}},
                         {'data_config': {'Load': True, 'Token': MockTab.TEST1}},
                     ]
                 },
@@ -299,11 +298,11 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'player_config': {'Player': True}, 'data_config': {'Load': True, 'Token': MockTab.TEST0}},
+                        {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
                         {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
                     ],
                     MockTab.TEST1: [
-                        {'player_config': {'Player': True}, 'data_config': {'Load': True, 'Token': MockTab.TEST1}},
+                        {'data_config': {'Load': True, 'Token': MockTab.TEST1}},
                         {'data_config': {'Load': True, 'Token': MockTab.TEST1}},
                         {'data_config': {'Load': True, 'Token': MockTab.TEST1}},
                         {'data_config': {'Load': True, 'Token': None}},
@@ -322,17 +321,17 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'player_config': {'Player': True}, 'data_config': {'Load': True, 'Token': MockTab.TEST0}},
+                        {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
                         {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
                     ],
                     MockTab.TEST1: [
-                        {'player_config': {'Player': True}, 'data_config': {'Load': True, 'Token': MockTab.TEST1}},
+                        {'data_config': {'Load': True, 'Token': MockTab.TEST1}},
                         {'data_config': {'Load': True, 'Token': MockTab.TEST1}},
                         {'data_config': {'Load': True, 'Token': MockTab.TEST1}},
                         {'data_config': {'Load': True, 'Token': None}},
                     ],
                     MockTab.TEST2: [
-                        {'player_config': {'Player': True}, 'data_config': {'Load': True, 'Token': None}},
+                        {'data_config': {'Load': True, 'Token': None}},
                     ],
                 },
                 exception=None,
@@ -341,4 +340,5 @@ class TestScrapper(BaseTestClass):
 
     def test_parse(self):
         for i in range(len(self.tests)):
-            self.apply_test(i, lambda obj, kwargs: obj.parse(**kwargs))
+            func = lambda obj, kwargs: obj.parse(**kwargs)
+            self.apply_test(i, func)

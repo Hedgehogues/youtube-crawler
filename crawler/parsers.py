@@ -1,88 +1,69 @@
-from jq import jq
-
+from crawler import jq
 from crawler.loaders import Tab
 
 
-class PageDescription:
-    def __init__(self):
-        self.channel_descrs = {}
-
-    def __getitem__(self, key):
-        return self.channel_descrs['channels'][key]
-
-
-# TODO: всюду ниже jq_path захордкожен 'crawler/'
 class BaseParser:
-    def __init__(self, tab, max_page=1, jq_path='crawler/jq/videos.jq'):
+    def __init__(self, jq_path, max_page=1):
         if max_page is not None and max_page < 1:
             raise AttributeError("Attribute max_page must be more 0")
         self.max_page = max_page
-        self.tab = tab
+        self.__count_pages = 0
         with open(jq_path) as fd_fq:
-            self._jq_load = jq(fd_fq.read())
+            self._jq_load = jq.jq(fd_fq.read())
 
-    def _parse(self, player_config, data_config):
+    def is_final_page(self):
+        return self.max_page is None or self.__count_pages < self.max_page
+
+    def parse(self, data_config):
+        self.__count_pages += 1
         data = self._jq_load.transform(data_config)
-        return [data], None
-
-    def parse(self, player_config, data_config):
-        return self._parse(player_config, data_config)
+        return data, None
 
 
 class ReloaderParser(BaseParser):
-    def __init__(self, tab, max_page, data_key, jq_load_path, jq_reload_path):
-        super().__init__(tab, max_page, jq_load_path)
+    def __init__(self, max_page, tab, jq_load_path, jq_reload_path):
+        """
+        :param max_page (int): max page of
+        :param tab (Tab.Enum): tab was defined type of parser
+        :param jq_load_path (str):
+        :param jq_reload_path (str):
+        """
+        super().__init__(max_page, jq_load_path)
 
         with open(jq_reload_path) as fd_fq:
-            self._jq_reload = jq(fd_fq.read())
-        self._next_page_token = None
-        self._data_key = data_key
+            self._jq_reload = jq.jq(fd_fq.read())
+        self.next_page_token = None
+        self.tab = tab
 
-    def _parse(self, player_config, data_config):
+    def parse(self, data_config):
+        self.__count_pages += 1
         data = self._jq_load.transform(data_config)
         itct = data['next_page_token']['itct']
         next_page_descr = data['next_page_token']['ctoken']
         if next_page_descr is not None and itct is not None:
-            return data[self._data_key], {
+            return data[self.tab], {
                 'ctoken': next_page_descr,
                 'itct':  itct,
             }
-        return [data[self._data_key]], None
-
-    def parse(self, player_config, data_config):
-        return self._parse(player_config, data_config)
-
-    def _reload_parse(self, data_config):
-        data = self._jq_reload.transform(data_config)
-        itct = data['next_page_token']['itct']
-        next_page_descr = data['next_page_token']['ctoken']
-        if next_page_descr is not None and itct is not None:
-            return data[self._data_key], {
-                'ctoken': next_page_descr,
-                'itct':  itct,
-            }
-        return data[self._data_key], None
-
-    def reload_parse(self, data_config):
-        return self._reload_parse(data_config)
+        return data[self.tab], None
 
 
 class VideosParser(ReloaderParser):
     def __init__(self, max_page=None, jq_load_path='crawler/jq/videos.jq', jq_reload_path='crawler/jq/videos_reload.jq'):
-        super().__init__(Tab.Videos, max_page, 'videos', jq_load_path, jq_reload_path)
+        super().__init__(max_page, Tab.Videos, jq_load_path, jq_reload_path)
         self.max_page = max_page
 
 
 class ChannelsParser(ReloaderParser):
     def __init__(self, max_page=None, jq_load_path='crawler/jq/channels.jq', jq_reload_path='crawler/jq/channels_reload.jq'):
-        super().__init__(Tab.Channels, max_page, 'channels', jq_load_path, jq_reload_path)
+        super().__init__(max_page, Tab.Channels, jq_load_path, jq_reload_path)
 
 
 class AboutParser(BaseParser):
     def __init__(self, jq_path='crawler/jq/about.jq'):
-        super().__init__(Tab.About, 1, jq_path)
+        super().__init__(jq_path=jq_path, max_page=1)
 
 
 class HomePageParser(BaseParser):
     def __init__(self, jq_path='crawler/jq/home_page.jq'):
-        super().__init__(Tab.HomePage, 1, jq_path)
+        super().__init__(jq_path=jq_path, max_page=1)

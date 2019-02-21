@@ -74,35 +74,20 @@ class Loader(BaseLoader):
     def load(self, channel_id, tab=Tab.HomePage, query_params=None):
         text = self._get_resp_text(self._base_url + channel_id + '/' + tab.value, params=query_params)
 
-        player_config = self.__get_player_config(text)
-        data_config = self.__get_data_config(text)
+        data_config = self.__extractor(text, self.data_config, "Data config serialize is failed", ';\n')
+        player_config = self.__extractor(text, self.player_config, "Player config serialize is failed", ');\n')
 
         return player_config, data_config
 
     @staticmethod
-    def __extractor(text, config):
+    def __extractor(text, config, msg, pattern_found):
         start_ind = text.find(config)+len(config)
-        finish_ind = start_ind + text[start_ind:].find(';\n')
-        config = text[start_ind:finish_ind]
-        return config
-
-    def __get_data_config(self, text):
-        start_ind = text.find(self.data_config)+len(self.data_config)
-        finish_ind = start_ind + text[start_ind:].find(';\n')
+        finish_ind = start_ind + text[start_ind:].find(pattern_found)
         config = text[start_ind:finish_ind]
         try:
             return json.loads(config)
         except Exception as e:
-            raise utils.JsonSerializableError("Data config serialize is failed", e)
-
-    def __get_player_config(self, text):
-        start_ind = text.find(self.player_config)+len(self.player_config)
-        finish_ind = start_ind + text[start_ind:].find(');\n')
-        config = text[start_ind:finish_ind]
-        try:
-            return json.loads(config)
-        except Exception as e:
-            raise utils.JsonSerializableError("Player config serialize is failed", e)
+            raise utils.JsonSerializableError(msg, e)
 
 
 class YoutubeDlLoader:

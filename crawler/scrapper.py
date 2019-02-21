@@ -30,12 +30,10 @@ class Scrapper:
         }
 
     def __reload_pages(self, p, next_page_token):
-        count_pages = 1
         descr_slice = []
-        while (p.max_page is None or count_pages < p.max_page) and next_page_token is not None:
-            count_pages += 1
+        while not p.is_final_page() and next_page_token is not None:
             data_config = self.reloader.load(next_page_token)
-            descr, next_page_token = p.reload_parse(data_config)
+            descr, next_page_token = p.parse(data_config)
             descr_slice.append(descr)
         return descr_slice
 
@@ -45,6 +43,6 @@ class Scrapper:
             self.logger.info("Loading: %s" % p.tab.value)
             player_config, data_config = self.loader.load(channel_id, p.tab, self.query_params[p.tab])
             self.logger.info("Loading was finished: %s" % p.tab.value)
-            descr, next_page_token = p.parse(player_config, data_config)
+            descr, next_page_token = p.parse(data_config)
             descrs[p.tab] = [descr] + self.__reload_pages(p, next_page_token)
         return descrs
