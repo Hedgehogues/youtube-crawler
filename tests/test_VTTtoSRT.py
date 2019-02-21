@@ -1,5 +1,6 @@
 import os
 
+from crawler import utils
 from crawler.vtt_to_srt import VTTtoSRT
 from tests.utils import BaseTestClass, SubTest
 
@@ -27,7 +28,6 @@ class TestVTTtoSRT(BaseTestClass):
         os.remove('%s/%s' % (path, self.__prefix + filename + self.__srt))
 
     def setUp(self):
-
         self.tests = [
             SubTest(
                 name="Test 1",
@@ -42,6 +42,13 @@ class TestVTTtoSRT(BaseTestClass):
                 args={'vtt_path': self.__test_file[1] + self.__vtt},
                 object=VTTtoSRT(prefix=self.__prefix),
                 middlewares_after=[lambda: self.__check_file(1)],
+            ),
+            SubTest(
+                name="Test 3",
+                description='Fail vtt exception',
+                args={'vtt_path': self.__test_file[0] + self.__vtt + '_'},
+                object=VTTtoSRT(),
+                exception=utils.ExtensionError,
             )
         ]
 

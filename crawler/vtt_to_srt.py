@@ -29,8 +29,7 @@ class VTTtoSRT:
         path, file_name = os.path.split(file_path)
 
         if not file_ext.lower() == self.__vtt:
-            utils.ExtensionError(self.__vtt, "Path to file: %s" % vtt_path)
-            return
+            raise utils.ExtensionError(self.__vtt, "Path to file: %s" % vtt_path)
 
         with open('%s/%s%s%s' % (path, self.prefix, file_name, self.__srt), "w") as fd_srt:
             self.__write_srt(fd_srt, vtt_path)
