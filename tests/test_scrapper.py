@@ -34,7 +34,7 @@ class MockLoader:
         token = None
         if not self.client.is_cur_page_last(tab):
             token = tab
-        return {'Player': True}, {'Load': True, 'Token': token}
+        return {'Player': True}, {'Token': token}
 
 
 class MockReloader:
@@ -45,7 +45,7 @@ class MockReloader:
         token = None
         if not self.client.is_cur_page_last(next_page_token):
             token = next_page_token
-        return {'Load': True, 'Token': token}
+        return {'Token': token}
 
 
 class MockParser:
@@ -57,9 +57,9 @@ class MockParser:
     def is_final_page(self):
         return not (self.max_page is None or self.__count_pages < self.max_page)
 
-    def parse(self, data_config):
+    def parse(self, data_config, is_reload=False):
         self.__count_pages += 1
-        return {'data_config': data_config}, data_config['Token']
+        return {'is_reload': is_reload, 'data_config': data_config}, data_config['Token']
 
 
 class TestScrapper(BaseTestClass):
@@ -113,7 +113,7 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'data_config': {'Load': True, 'Token': None}}
+                        {'is_reload': False, 'data_config': {'Token': None}}
                     ]
                 },
                 exception=None,
@@ -129,7 +129,7 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'data_config': {'Load': True, 'Token': None}}
+                        {'is_reload': False, 'data_config': {'Token': None}}
                     ]
                 },
                 exception=None,
@@ -145,8 +145,8 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
-                        {'data_config': {'Load': True, 'Token': None}},
+                        {'is_reload': False, 'data_config': {'Token': MockTab.TEST0}},
+                        {'is_reload': True, 'data_config': {'Token': None}},
                     ]
                 },
                 exception=None,
@@ -162,8 +162,8 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
-                        {'data_config': {'Load': True, 'Token': None}},
+                        {'is_reload': False, 'data_config': {'Token': MockTab.TEST0}},
+                        {'is_reload': True, 'data_config': {'Token': None}},
                     ]
                 },
                 exception=None,
@@ -179,8 +179,8 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
-                        {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
+                        {'is_reload': False, 'data_config': {'Token': MockTab.TEST0}},
+                        {'is_reload': True, 'data_config': {'Token': MockTab.TEST0}},
                     ]
                 },
                 exception=None,
@@ -197,10 +197,10 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'data_config': {'Load': True, 'Token': None}},
+                        {'is_reload': False, 'data_config': {'Token': None}},
                     ],
                     MockTab.TEST1: [
-                        {'data_config': {'Load': True, 'Token': None}},
+                        {'is_reload': False, 'data_config': {'Token': None}},
                     ]
                 },
                 exception=None,
@@ -216,10 +216,10 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'data_config': {'Load': True, 'Token': None}}
+                        {'is_reload': False, 'data_config': {'Token': None}}
                     ],
                     MockTab.TEST1: [
-                        {'data_config': {'Load': True, 'Token': None}}
+                        {'is_reload': False, 'data_config': {'Token': None}}
                     ]
                 },
                 exception=None,
@@ -235,12 +235,12 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
-                        {'data_config': {'Load': True, 'Token': None}},
+                        {'is_reload': False, 'data_config': {'Token': MockTab.TEST0}},
+                        {'is_reload': True, 'data_config': {'Token': None}},
                     ],
                     MockTab.TEST1: [
-                        {'data_config': {'Load': True, 'Token': MockTab.TEST1}},
-                        {'data_config': {'Load': True, 'Token': None}},
+                        {'is_reload': False, 'data_config': {'Token': MockTab.TEST1}},
+                        {'is_reload': True, 'data_config': {'Token': None}},
                     ]
                 },
                 exception=None,
@@ -256,12 +256,12 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
-                        {'data_config': {'Load': True, 'Token': None}},
+                        {'is_reload': False, 'data_config': {'Token': MockTab.TEST0}},
+                        {'is_reload': True, 'data_config': {'Token': None}},
                     ],
                     MockTab.TEST1: [
-                        {'data_config': {'Load': True, 'Token': MockTab.TEST1}},
-                        {'data_config': {'Load': True, 'Token': None}},
+                        {'is_reload': False, 'data_config': {'Token': MockTab.TEST1}},
+                        {'is_reload': True, 'data_config': {'Token': None}},
                     ]
                 },
                 exception=None,
@@ -277,12 +277,12 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
-                        {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
+                        {'is_reload': False, 'data_config': {'Token': MockTab.TEST0}},
+                        {'is_reload': True, 'data_config': {'Token': MockTab.TEST0}},
                     ],
                     MockTab.TEST1: [
-                        {'data_config': {'Load': True, 'Token': MockTab.TEST1}},
-                        {'data_config': {'Load': True, 'Token': MockTab.TEST1}},
+                        {'is_reload': False, 'data_config': {'Token': MockTab.TEST1}},
+                        {'is_reload': True, 'data_config': {'Token': MockTab.TEST1}},
                     ]
                 },
                 exception=None,
@@ -298,14 +298,14 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
-                        {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
+                        {'is_reload': False, 'data_config': {'Token': MockTab.TEST0}},
+                        {'is_reload': True, 'data_config': {'Token': MockTab.TEST0}},
                     ],
                     MockTab.TEST1: [
-                        {'data_config': {'Load': True, 'Token': MockTab.TEST1}},
-                        {'data_config': {'Load': True, 'Token': MockTab.TEST1}},
-                        {'data_config': {'Load': True, 'Token': MockTab.TEST1}},
-                        {'data_config': {'Load': True, 'Token': None}},
+                        {'is_reload': False, 'data_config': {'Token': MockTab.TEST1}},
+                        {'is_reload': True, 'data_config': {'Token': MockTab.TEST1}},
+                        {'is_reload': True, 'data_config': {'Token': MockTab.TEST1}},
+                        {'is_reload': True, 'data_config': {'Token': None}},
                     ]
                 },
                 exception=None,
@@ -321,17 +321,17 @@ class TestScrapper(BaseTestClass):
                 ),
                 want={
                     MockTab.TEST0: [
-                        {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
-                        {'data_config': {'Load': True, 'Token': MockTab.TEST0}},
+                        {'is_reload': False, 'data_config': {'Token': MockTab.TEST0}},
+                        {'is_reload': True, 'data_config': {'Token': MockTab.TEST0}},
                     ],
                     MockTab.TEST1: [
-                        {'data_config': {'Load': True, 'Token': MockTab.TEST1}},
-                        {'data_config': {'Load': True, 'Token': MockTab.TEST1}},
-                        {'data_config': {'Load': True, 'Token': MockTab.TEST1}},
-                        {'data_config': {'Load': True, 'Token': None}},
+                        {'is_reload': False, 'data_config': {'Token': MockTab.TEST1}},
+                        {'is_reload': True, 'data_config': {'Token': MockTab.TEST1}},
+                        {'is_reload': True, 'data_config': {'Token': MockTab.TEST1}},
+                        {'is_reload': True, 'data_config': {'Token': None}},
                     ],
                     MockTab.TEST2: [
-                        {'data_config': {'Load': True, 'Token': None}},
+                        {'is_reload': False, 'data_config': {'Token': None}},
                     ],
                 },
                 exception=None,

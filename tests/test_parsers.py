@@ -13,6 +13,6 @@ class TestReloaderParser(BaseTestClass):
             ),
         ]
 
-    # def test_parse(self):
-    #     for i in range(len(self.tests)):
-    #         self.apply_test(i, lambda obj, kwargs: obj.transform(**kwargs))
+    def test_parse(self):
+        for i in range(len(self.tests)):
+            self.apply_test(i, lambda obj, kwargs: obj.transform(**kwargs))
