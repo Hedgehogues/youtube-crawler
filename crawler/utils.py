@@ -27,6 +27,29 @@ class CrawlerExceptions(Exception):
         return e
 
 
+class DownloadError(CrawlerExceptions):
+    """ Downloading was failed """
+    def __init__(self, msg, e=None):
+        super().__init__(msg, e)
+
+
+class ReloadTokenError(CrawlerExceptions):
+    """ Token was not found or invalid
+
+    This exception may be thrown when token for reload page not found or invalid
+    """
+    def __init__(self, msg, e=None):
+        super().__init__(msg, e)
+
+
+class ParserError(CrawlerExceptions):
+    """
+    Problem while parsing response
+    """
+    def __init__(self, msg, e=None):
+        super().__init__(msg, e)
+
+
 class JsonExtractionError(CrawlerExceptions):
     """Json with data not found in a page. This exception is generated of Scrapper
 
@@ -73,11 +96,12 @@ class CacheGetChannelsError(CrawlerExceptions):
         super().__init__("Problem with getting channels from Cache. %s" % msg, e)
 
 
-class CacheSetChannelsError(CrawlerExceptions):
-    """There is problem with setting channels to Cache. This exception is generated of Cache
+class ExtensionError(CrawlerExceptions):
+    """There is problem with extension of file. For instance, file has invalid extension
     """
-    def __init__(self, msg="", e=None):
-        super().__init__("Problem with setting channels to Cache. %s" % msg, e)
+    def __init__(self, ext, msg="", e=None):
+        msg = 'Message: "%s".' % msg if len(msg) > 0 else ""
+        super().__init__("Extension problem. %s Extension: %s" % (msg, ext), e)
 
 
 def check_resp(resp):
