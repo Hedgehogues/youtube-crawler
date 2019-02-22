@@ -52,6 +52,12 @@ class DBSqlLiteCache:
         if not self.__is_exist_db():
             self.__create_db()
 
+    def set_channel_scrapped(self, channel_id):
+        raise Exception("Not implemented")
+
+    def set_channel_downloaded(self, channel_id):
+        raise Exception("Not implemented")
+
     def set_video_descr(self, video):
         raise Exception("Not implemented")
 

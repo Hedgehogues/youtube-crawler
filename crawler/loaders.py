@@ -119,10 +119,13 @@ class YoutubeDlLoader:
         # TODO: логгировать все статусы обкачки для того, чтобы можно было возобновить обкачку с прежнего места
         # TODO: заменить на кастомные обкачки, так как youtube-dl использует 2 обращения (за субтитрами и за видео)
 
-        url = self._base_url + '?v=%s' % video_id
-        descr = self._video_descr_extractor.extract(url)
-        if 'ru' not in descr['automatic_captions']:
-            return None
+        try:
+            url = self._base_url + '?v=%s' % video_id
+            descr = self._video_descr_extractor.extract(url)
+            if 'ru' not in descr['automatic_captions']:
+                return None
 
-        self._audio_ydl.download([url])
-        return descr
+            self._audio_ydl.download([url])
+            return descr
+        except Exception as e:
+            raise utils.DownloadError(msg="Downloading was failed. VideoId: %s" % video_id, e=e)

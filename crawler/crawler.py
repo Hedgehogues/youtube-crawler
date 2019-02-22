@@ -22,7 +22,6 @@ class BaseCrawler:
                 return fn(), None
             except e:
                 count += 1
-        # TODO: допихивать к ошибке информацию про count_attemps
         return None, e
 
     def _info(self, msg):
@@ -112,7 +111,8 @@ class YoutubeCrawler(BaseCrawler):
             'full_description': descr,
         }
 
-    def __get_neighb_channels(self, descr):
+    @staticmethod
+    def __get_neighb_channels(descr):
         channels = []
         for page in descr[Tab.Channels]:
             channels.append(page['channels'])
@@ -123,13 +123,13 @@ class YoutubeCrawler(BaseCrawler):
         for short_video_descr in descrs[Tab.Videos]:
             video_id = short_video_descr['id']
 
-            self._info("Check in Cache videoId: %s" % video_id)
+            # Check in Cache videoId
             err = self.__cache.check_video_descr(video_id)
             if err is None:
                 self._info("Such video already exist. VideoId: %d" % video_id)
                 continue
 
-            self._info("Download video (videoId: %s) from youtube" % video_id)
+            # self._info("Download video (videoId: %s) from youtube" % video_id)
             full_video_descr, err = self._apply(self.__video_downloader.load(short_video_descr))
             self._warn(err, err)
 
@@ -143,7 +143,7 @@ class YoutubeCrawler(BaseCrawler):
         ch_ids_str = ','.join(channel_ids)
         self._alert(err, err + "%s: [%s]" % ("ChannelIds", ch_ids_str))
 
-        self._info("Getting first channel from Cache")
+        # Getting first channel from Cache
         channel_id, err = self.__cache.get_best_channel_id()
         self._error(err, err + self.__crash_msg % ("ChannelIds", ch_ids_str))
 
@@ -154,20 +154,28 @@ class YoutubeCrawler(BaseCrawler):
             if err is not None:
                 continue
 
-            self._info("Setting current channel into Cache. ChannelId: %s" % channel_id)
+            # Channel was scrapped
+            channel_id, err = self.__cache.set_channel_scrapped(channel_id)
+            self._error(err, err + self.__crash_msg % ("ChannelId", channel_id))
+
+            # Setting current channel into Cache. ChannelId
             channel = self.__create_cur_channel(channel_id, False, True, descr)
             err = self.__cache.set_channel(channel)
             self._error(err, err + self.__crash_msg % ("ChannelIds", ch_ids_str))
 
+            # Setting neighbours channels into Cache. ChannelId
             neighb_channels = self.__get_neighb_channels(descr)
             ch_ids_str = ','.join([ch['id'] for ch in neighb_channels])
-            self._info("Setting neighbours channels into Cache. ChannelIds: %s" % ch_ids_str)
             err = self.__cache.update_channels(channel['id'], neighb_channels)
             self._error(err, err + self.__crash_msg % ("ChannelIds", ch_ids_str))
 
-            self._info("Downloading youtube for ChannelId: %s" % channel_id)
+            # Downloading youtube for ChannelId
             self.__download_videos(descr)
 
-            self._info("Getting next channel from Cache")
+            # Channel was downloaded
+            channel_id, err = self.__cache.set_channel_downloaded(channel_id)
+            self._error(err, err + self.__crash_msg % ("ChannelId", channel_id))
+
+            # Getting next channel from Cache
             channel_id, err = self.__cache.get_best_channel_id()
             self._error(err, err + self.__crash_msg % ("ChannelIds", channel_id))
