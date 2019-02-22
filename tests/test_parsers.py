@@ -49,7 +49,10 @@ class TestReloaderParser(BaseTestClass):
             SubTest(
                 name="Test 3",
                 description="Valid data config.",
-                args={'data_config': {'next_page_token': {'itct': 'token', 'ctoken': 'token'}, MockTab.TEST0: []}, 'is_reload': False},
+                args={
+                    'data_config': {'next_page_token': {'itct': 'token', 'ctoken': 'token'}, MockTab.TEST0: []},
+                    'is_reload': False
+                },
                 object=parsers.ReloaderParser(
                     max_page=None,
                     tab=MockTab.TEST0,
@@ -61,7 +64,10 @@ class TestReloaderParser(BaseTestClass):
             SubTest(
                 name="Test 4",
                 description="Valid data config. There is not ctoken",
-                args={'data_config': {'next_page_token': {'itct': 'token', 'ctoken': None}, MockTab.TEST0: []}, 'is_reload': False},
+                args={
+                    'data_config': {'next_page_token': {'itct': 'token', 'ctoken': None}, MockTab.TEST0: []},
+                    'is_reload': False
+                },
                 object=parsers.ReloaderParser(
                     max_page=None,
                     tab=MockTab.TEST0,
@@ -73,7 +79,10 @@ class TestReloaderParser(BaseTestClass):
             SubTest(
                 name="Test 5",
                 description="Valid data config. There is not itct",
-                args={'data_config': {'next_page_token': {'itct': None, 'ctoken': 'token'}, MockTab.TEST0: []}, 'is_reload': False},
+                args={
+                    'data_config': {'next_page_token': {'itct': None, 'ctoken': 'token'}, MockTab.TEST0: []},
+                    'is_reload': False
+                },
                 object=parsers.ReloaderParser(
                     max_page=None,
                     tab=MockTab.TEST0,
@@ -85,10 +94,23 @@ class TestReloaderParser(BaseTestClass):
         ]
 
         self.tests_is_final_page = [
-            self.__create_subtest_is_final_page(times=0, max_page=1)
+            self.__create_subtest_is_final_page(times=0, max_page=1, want=False, test_num=0),
+            self.__create_subtest_is_final_page(times=0, max_page=2, want=False, test_num=1),
+            self.__create_subtest_is_final_page(times=0, max_page=3, want=False, test_num=2),
+            self.__create_subtest_is_final_page(times=1, max_page=None, want=False, test_num=3),
+            self.__create_subtest_is_final_page(times=2, max_page=None, want=False, test_num=4),
+            self.__create_subtest_is_final_page(times=3, max_page=None, want=False, test_num=5),
+            self.__create_subtest_is_final_page(times=0, max_page=1, want=False, test_num=6),
+            self.__create_subtest_is_final_page(times=1, max_page=1, want=True, test_num=7),
+            self.__create_subtest_is_final_page(times=2, max_page=1, want=True, test_num=8),
+            self.__create_subtest_is_final_page(times=3, max_page=1, want=True, test_num=9),
+            self.__create_subtest_is_final_page(times=0, max_page=2, want=False, test_num=10),
+            self.__create_subtest_is_final_page(times=1, max_page=2, want=False, test_num=11),
+            self.__create_subtest_is_final_page(times=2, max_page=2, want=True, test_num=12),
+            self.__create_subtest_is_final_page(times=3, max_page=2, want=True, test_num=13),
         ]
 
-    def __create_subtest_is_final_page(self, times, max_page):
+    def __create_subtest_is_final_page(self, times, max_page, want, test_num):
         object = parsers.ReloaderParser(
             max_page=max_page,
             tab=MockTab.TEST0,
@@ -102,10 +124,9 @@ class TestReloaderParser(BaseTestClass):
         for i in range(times):
             object.parse(**parse_kwargs)
         subtest = SubTest(
-            name="Test 1",
-            description="Valid data config. There is not itct",
+            name="Test %d" % test_num,
             object=object,
-            want=False,
+            want=want,
         )
         return subtest
 
