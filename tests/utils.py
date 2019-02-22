@@ -1,4 +1,5 @@
 import json
+import os
 import unittest
 
 
@@ -28,6 +29,19 @@ class BaseTestClass(unittest.TestCase):
             is_exception = True
             self.assertEqual(type(e), exception)
         self.assertTrue(is_exception)
+
+    def check_file(self, test_file, ext, prefix):
+        path, filename = os.path.split(test_file)
+        fd = open('%s/%s' % (path, prefix + filename + ext))
+        lines_got_srt = fd.readlines()
+        fd.close()
+        fd = open('%s/%s' % (path, filename + ext))
+        lines_want_srt = fd.readlines()
+        fd.close()
+        for item in zip(lines_want_srt, lines_got_srt):
+            self.assertEqual(item[0], item[1])
+        self.assertEqual(len(lines_want_srt), len(lines_got_srt))
+        os.remove('%s/%s' % (path, prefix + filename + ext))
 
     def apply_test(self, test, func):
         kwargs = test.args
