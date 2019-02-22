@@ -5,7 +5,7 @@ import langdetect
 from collections import Counter
 
 
-class ChannelStatus(Enum):
+class ChannelLanguage(Enum):
     STRONG_RU = 0
     WEAK_RU = 1
     FOREIGN = 2
@@ -17,32 +17,47 @@ class Filter:
         self._len_descr = len_descr
         self._len_descr_parts = len_descr_parts
 
+    @staticmethod
+    def __is_title_videos_rus(counter):
+        if len(counter) == 0:
+            return ''
+        return max(counter, key=lambda el: counter[el]) == 'ru'
+
     def apply(self, descr):
         # TODO: выпиливать ссылки
+        # TODO: выпиливать цифры
+        # TODO: выпиливать специальные символы
+        # TODO: выпиливать хэш-теги и (@)
+        # TODO: заменить \n и \t на пробелы
         try:
-            description = langdetect.detect(descr[Tab.About][0]['description'])
+            description = descr[Tab.About][0]['description']
+            lang_description = langdetect.detect(description)
         except:
             description = ''
+            lang_description = ''
+        if lang_description == 'ru' and len(description) >= self._len_descr:
+            return ChannelLanguage.STRONG_RU
 
         try:
-            description_parts = langdetect.detect(' '.join(descr[Tab.HomePage][0]['videos']['general']['description_parts']))
+            description_parts = ' '.join(descr[Tab.HomePage][0]['videos']['general']['description_parts'])
+            lang_description_parts = langdetect.detect(description_parts)
         except:
+            lang_description_parts = ''
             description_parts = ''
+        if lang_description_parts == 'ru' and len(description_parts) >= self._len_descr_parts:
+            return ChannelLanguage.STRONG_RU
 
         try:
-            videos_title = [langdetect.detect(video['title']) for video in descr[Tab.Videos]]
+            lang_videos_titles = [langdetect.detect(video['title']) for video in descr[Tab.Videos]]
         except:
-            videos_title = []
+            lang_videos_titles = []
 
-        if description == 'ru' and len(description) > self._len_descr or \
-                description_parts == 'ru' and len(description_parts) > self._len_descr_parts:
-            return ChannelStatus.STRONG_RU
-        counter = Counter(videos_title)
-        if len(counter) == 0:
-            return ChannelStatus.UNDEFINED
-        is_ru = max(counter, key=lambda el: counter[el]) == 'ru'
+        counter = Counter(lang_videos_titles)
+        is_ru = self.__is_title_videos_rus(counter)
         if is_ru:
-            return ChannelStatus.WEAK_RU
-        return ChannelStatus.FOREIGN
+            return ChannelLanguage.WEAK_RU
 
+        if len(counter) == 0 and len(description_parts) < self._len_descr_parts and len(description) < self._len_descr:
+            return ChannelLanguage.UNDEFINED
 
+        return ChannelLanguage.FOREIGN
