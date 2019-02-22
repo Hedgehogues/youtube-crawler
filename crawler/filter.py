@@ -28,6 +28,7 @@ class Filter:
         # TODO: выпиливать цифры
         # TODO: выпиливать специальные символы
         # TODO: выпиливать хэш-теги и (@)
+        # TODO: заменить \n и \t на пробелы
         try:
             description = descr[Tab.About][0]['description']
             lang_description = langdetect.detect(description)

@@ -93,7 +93,7 @@ class SubTest:
         self.exception = self.fill('exception', None, kwargs)
         self.middlewares_before = self.fill('middlewares_before', [], kwargs)
         self.middlewares_after = self.fill('middlewares_after', [], kwargs)
-        self.configuration = self.fill('configure_', None, kwargs)
+        self.configuration = self.fill('configuration', None, kwargs)
 
     @staticmethod
     def fill(k, r, kwargs):
