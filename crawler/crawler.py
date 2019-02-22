@@ -5,49 +5,19 @@ from crawler.scrapper import Scrapper
 from crawler.simple_logger import SimpleLogger
 
 
-class BaseCrawler:
-    # TODO: переписать на StateMachine
-    def __init__(self, logger, max_attempts=5):
-        self.__max_attempts = max_attempts
-
-        self._logger = logger
-        if self._logger is None:
-            self._logger = SimpleLogger()
-
-    def _apply(self, fn):
-        count = 0
-        e = None
-        while count < self.__max_attempts:
-            try:
-                return fn(), None
-            except e:
-                count += 1
-        return None, e
-
-    def _info(self, msg):
-        self._logger.info(msg)
-
-    def _warn(self, err_cond, err):
-        if err_cond is not None:
-            self._logger.warn(err)
-
-    def _alert(self, err_cond, err):
-        if err_cond is not None:
-            self._logger.alert(err)
-
-    def _error(self, err_cond, err):
-        if err_cond is not None:
-            self._logger.error(err)
-
-
-class YoutubeCrawler(BaseCrawler):
+class YoutubeCrawler:
     # * TODO: Если загрузка была прервана, то все видео начинают обкачиваться заново. При этом, если скраперу было
     #   TODO: указано скачать не все видео, а только часть, то при повторной загрузке, будет выбран другой набор видео
 
     # * TODO: Скрапер обкачивает k видео, а Crawler m из них может отбраковать, после чего не скачает новые k - m видео
 
     def __init__(self, logger=None, cache=None, ydl_loader=None, scraper=None, max_attempts=5):
-        super().__init__(logger, max_attempts)
+        # TODO: переписать на StateMachine
+        self.__max_attempts = max_attempts
+
+        self._logger = logger
+        if self._logger is None:
+            self._logger = SimpleLogger()
 
         self.__cache = cache
         if self.__cache is None:
@@ -77,6 +47,31 @@ class YoutubeCrawler(BaseCrawler):
             logger=self._logger
         )
         self.__scraper = scrapper
+
+    def _apply(self, fn):
+        count = 0
+        e = None
+        while count < self.__max_attempts:
+            try:
+                return fn(), None
+            except e:
+                count += 1
+        return None, e
+
+    def _info(self, msg):
+        self._logger.info(msg)
+
+    def _warn(self, err_cond, err):
+        if err_cond is not None:
+            self._logger.warn(err)
+
+    def _alert(self, err_cond, err):
+        if err_cond is not None:
+            self._logger.alert(err)
+
+    def _error(self, err_cond, err):
+        if err_cond is not None:
+            self._logger.error(err)
 
     @staticmethod
     def __create_video(video_id, channel_id, full_descr, short_descr):
@@ -129,7 +124,7 @@ class YoutubeCrawler(BaseCrawler):
                 self._info("Such video already exist. VideoId: %d" % video_id)
                 continue
 
-            # self._info("Download video (videoId: %s) from youtube" % video_id)
+            # Download video
             full_video_descr, err = self._apply(self.__video_downloader.load(short_video_descr))
             self._warn(err, err)
 
