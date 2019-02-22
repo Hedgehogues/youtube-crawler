@@ -5,7 +5,8 @@ import uuid
 from webvtt import WebVTT
 import html
 from pysrt.srtitem import SubRipItem, SubRipTime
-from crawler.cutter import validate_ext
+
+from cutter import validate_ext
 
 
 class FfmpegWavTranscoder:
