@@ -1,5 +1,4 @@
-from crawler.cutter.cutter import AudioCutter
-
+from cutter.cutter import AudioCutter
 
 video_id = '-6RG9SfBkP0'
 audio_name = video_id + '.wav'
