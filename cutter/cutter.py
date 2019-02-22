@@ -6,9 +6,9 @@ import os
 import srt
 from pydub import AudioSegment
 
-from crawler.cutter import validate_ext, srt_ext
-from crawler.cutter import postprocessor as prc
-from crawler.cutter.transcoder import FfmpegWavTranscoder
+from cutter import validate_ext, srt_ext
+from cutter import postprocessor as prc
+from cutter import FfmpegWavTranscoder
 
 
 class Dialogue:

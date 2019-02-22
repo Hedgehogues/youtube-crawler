@@ -46,6 +46,6 @@ class TestVTTtoSRT(BaseTestClass):
             )
         ]
 
-    def test_parse(self):
+    def test_transform(self):
         for test in self.tests:
             self.apply_test(test, lambda obj, kwargs: obj.transform(**kwargs))

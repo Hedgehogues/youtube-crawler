@@ -64,7 +64,7 @@ class DBSqlLiteCache:
     def set_channel(self, channels):
         raise Exception("Not implemented")
 
-    def update_channels(self, channels):
+    def update_channels(self, channel_id, channels):
         raise Exception("Not implemented")
 
     def get_best_channel_id(self):
