@@ -5,7 +5,7 @@
 			"count_subscribers": .subscriberCountText.simpleText, 
 			"title": .title.simpleText, 
 			"count_videos": .videoCountText.simpleText,
-			"channelId": .channelId
+			"channel_id": .channelId
 		}
 	],
 	"tabs": .subMenu.channelSubMenuRenderer.contentTypeSubMenuItems | [

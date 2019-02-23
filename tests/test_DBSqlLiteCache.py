@@ -36,7 +36,29 @@ class TestDBSqlLiteCache(BaseTestClass):
         )
 
     def setUp(self):
-        self.tests = [
+        self.constructor_tests = [
+            self.__create_subtest_constructor(
+                1,
+                False,
+                [],
+                [lambda: self.__check_exist_file(self.__db_path)]
+            ),
+            self.__create_subtest_constructor(
+                2,
+                False,
+                [lambda: self.__create_filename(self.__db_path)],
+                [],
+                FileExistsError
+            ),
+            self.__create_subtest_constructor(
+                3,
+                True,
+                [lambda: self.__create_filename(self.__db_path)],
+                [lambda: self.__check_exist_file(self.__db_path)]
+            ),
+        ]
+
+        self.constructor_tests = [
             self.__create_subtest_constructor(
                 1,
                 False,
@@ -59,5 +81,5 @@ class TestDBSqlLiteCache(BaseTestClass):
         ]
 
     def test___init__(self):
-        for test in self.tests:
+        for test in self.constructor_tests:
             self.apply_test(test, lambda obj, kwargs: obj(**kwargs))

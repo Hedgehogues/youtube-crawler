@@ -3,6 +3,20 @@ import sqlite3
 
 
 class DBSqlLiteCache:
+    """
+    Rows in tables with channels can be:
+        * valid==True, scrapped==True, downloaded==False. It means, that channel was scrapped and some videos were not
+            downloaded
+        * valid==True, scrapped==False, downloaded==False. It means, that channel was got from another channel or as
+            base channels. Some videos were not downloaded
+        * valid==False, scrapped==False, downloaded==False. It means, that channel is not valid
+        * valid==False, scrapped==False, downloaded==True. It means, that channel has been completely download
+    Any other configuration is not possible and wrong. Field description:
+        * field valid: if field sets True, then channel have not errors
+        * field scrapped: if field sets True, then channel was scrapped
+        * field downloaded: if field sets True, then channel was download with all available videos (or limited videos)
+    """
+
     __channels_table_name = 'channels'
     __videos_table_name = 'videos'
 
@@ -20,6 +34,7 @@ class DBSqlLiteCache:
       channel_id text,
       video_id text PRIMARY KEY,
       valid boolean,
+      scrapped boolean,
       download boolean,
       priority float,
       description text
@@ -41,10 +56,12 @@ class DBSqlLiteCache:
         self.conn = sqlite3.connect(path)
         self.__create_db()
 
-    def set_channel_scrapped(self, channel_id):
-        raise Exception("Not implemented")
-
     def set_channel_downloaded(self, channel_id):
+        """
+        This function process next cases:
+            * valid==False, scrapped==False, downloaded==True
+        If you want got more information, see class description
+        """
         raise Exception("Not implemented")
 
     def set_video_descr(self, video):
@@ -56,10 +73,14 @@ class DBSqlLiteCache:
     def set_empty_channels(self, channel_ids):
         raise Exception("Not implemented")
 
-    def set_channel(self, channels):
-        raise Exception("Not implemented")
-
-    def update_channels(self, channel_id, channels):
+    def update_channels(self, channels, scrapped, valid):
+        """
+        This function process next cases:
+            * valid==True, scrapped==True, downloaded==False
+            * valid==True, scrapped==False, downloaded==False
+            * valid==False, scrapped==False, downloaded==False
+        If you want got more information, see class description
+        """
         raise Exception("Not implemented")
 
     def get_best_channel_id(self):
