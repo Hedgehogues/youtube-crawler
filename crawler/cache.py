@@ -17,34 +17,59 @@ class DBSqlLiteCache:
         * field downloaded: if field sets True, then channel was download with all available videos (or limited videos)
     """
 
-    __channels_table_name = 'channels'
-    __videos_table_name = 'videos'
-
     __sql_query_create_channel = '''
-    create table %s (
+    create table channels (
       channel_id text PRIMARY KEY,
       valid boolean,
-      download boolean,
+      scrapped boolean,
+      downloaded boolean,
       priority float,
       description text
-    );''' % __channels_table_name
+    );'''
 
     __sql_query_create_videos = '''
-    create table %s (
+    create table videos (
       channel_id text,
       video_id text PRIMARY KEY,
       valid boolean,
-      scrapped boolean,
-      download boolean,
+      downloaded boolean,
       priority float,
       description text
-    );''' % __videos_table_name
+    );'''
 
-    def __create_db(self):
-        c = self.conn.cursor()
+    # __sql_update_channel = '''
+    # update %s
+    # set
+    #   channel_id=?,
+    #   valid=?,
+    #   scrapped=?,
+    #   downloaded=?,
+    #   priority=?,
+    #   full_description=?,
+    #   short_description=?
+    # where channel_id=?;
+    # ''' % __sql_query_create_channel
+
+    __sql_update_channel = '''
+    update videos 
+    set
+      channel_id=?;
+    '''
+
+    __sql_insert_channel = '''
+    insert into channels(channel_id) 
+    values(?)
+    '''
+
+    __sql_select_channel = '''
+    select channel_id from channels 
+    '''
+
+    def __create_db(self, conn):
+        c = conn.cursor()
         c.execute(self.__sql_query_create_channel)
         c.execute(self.__sql_query_create_videos)
-        self.conn.commit()
+        conn.commit()
         c.close()
 
     def __init__(self, path='data/db.sqlite', hard=False):
@@ -53,8 +78,10 @@ class DBSqlLiteCache:
 
         if os.path.exists(path):
             raise FileExistsError("Data base already exist. Path: %s" % os.path.abspath(path))
-        self.conn = sqlite3.connect(path)
-        self.__create_db()
+        self.db_path = path
+        conn = sqlite3.connect(self.db_path)
+        self.__create_db(conn)
+        conn.close()
 
     def set_channel_downloaded(self, channel_id):
         """
@@ -73,6 +100,19 @@ class DBSqlLiteCache:
     def set_empty_channels(self, channel_ids):
         raise Exception("Not implemented")
 
+    @staticmethod
+    def __create_args_update_channels(channel, scrapped, valid):
+        return (
+            channel['channel_id'],
+            # valid,
+            # scrapped,
+            # False,
+            # channel['priority'],
+            # channel['full_description'],
+            # channel['short_description'],
+            # channel['channel_id']
+        )
+
     def update_channels(self, channels, scrapped, valid):
         """
         This function process next cases:
@@ -81,7 +121,20 @@ class DBSqlLiteCache:
             * valid==False, scrapped==False, downloaded==False
         If you want got more information, see class description
         """
-        raise Exception("Not implemented")
+        conn = sqlite3.connect(self.db_path)
+        c = conn.cursor()
+        errors = []
+        for channel in channels:
+            c.execute(self.__sql_select_channel)
+            args = self.__create_args_update_channels(channel, scrapped, valid)
+            query = self.__sql_insert_channel
+            res = c.fetchone()
+            if res is not None and len(res) != 0:
+                errors.append("")
+                query = self.__sql_update_channel
+            conn.execute(query, args)
+        conn.commit()
+        c.close()
 
     def get_best_channel_id(self):
         raise Exception("Not implemented")
