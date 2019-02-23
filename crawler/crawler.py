@@ -6,10 +6,8 @@ from crawler.simple_logger import SimpleLogger
 
 
 class YoutubeCrawler:
-    # * TODO: Если загрузка была прервана, то все видео начинают обкачиваться заново. При этом, если скраперу было
-    #   TODO: указано скачать не все видео, а только часть, то при повторной загрузке, будет выбран другой набор видео
-
-    # * TODO: Скрапер обкачивает k видео, а Crawler m из них может отбраковать, после чего не скачает новые k - m видео
+    # TODO: указано скачать не все видео, а только часть, то при повторной загрузке, будет выбран другой набор видео
+    # TODO: Скрапер обкачивает k видео, а Crawler m из них может отбраковать, после чего не скачает новые k - m видео
 
     def __init__(self, logger=None, cache=None, ydl_loader=None, scraper=None, max_attempts=5):
         # TODO: переписать на StateMachine
@@ -92,18 +90,16 @@ class YoutubeCrawler:
         }
 
     @staticmethod
-    def __create_cur_channel(channel_id, download, preload, descr):
+    def __create_cur_channel(channel_id, descr):
         # TODO: заменить на алгоритмы valid и priority
         valid = True
         priority = 0
 
         return {
             'channel_id': channel_id,
-            'download': download,
             'priority': priority,
             'valid': valid,
-            'preload': preload,
-            'full_description': descr,
+            'description': descr,
         }
 
     @staticmethod
@@ -154,7 +150,7 @@ class YoutubeCrawler:
             self._error(err, err + self.__crash_msg % ("ChannelId", channel_id))
 
             # Setting current channel into Cache. ChannelId
-            channel = self.__create_cur_channel(channel_id, False, True, descr)
+            channel = self.__create_cur_channel(channel_id, descr)
             err = self.__cache.set_channel(channel)
             self._error(err, err + self.__crash_msg % ("ChannelIds", ch_ids_str))
 
