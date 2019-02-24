@@ -21,6 +21,19 @@ class TestVTTtoSRT(BaseTestClass):
             'prefix': self.__prefix,
         }
 
+    def __check_file(self, test_file, ext, prefix):
+        path, filename = os.path.split(test_file)
+        fd = open('%s/%s' % (path, prefix + filename + ext))
+        lines_got_srt = fd.readlines()
+        fd.close()
+        fd = open('%s/%s' % (path, filename + ext))
+        lines_want_srt = fd.readlines()
+        fd.close()
+        for item in zip(lines_want_srt, lines_got_srt):
+            self.assertEqual(item[0], item[1])
+        self.assertEqual(len(lines_want_srt), len(lines_got_srt))
+        os.remove('%s/%s' % (path, prefix + filename + ext))
+
     def setUp(self):
         self.tests = [
             SubTest(
@@ -28,14 +41,14 @@ class TestVTTtoSRT(BaseTestClass):
                 description='File: %s' % os.path.basename(self.__test_file[0]),
                 args={'vtt_path': self.__test_file[0] + self.__vtt},
                 object=VTTtoSRT(prefix=self.__prefix),
-                middlewares_after=[lambda: self.check_file(**self.__get_checkfile_args(0))],
+                middlewares_after=[lambda: self.__check_file(**self.__get_checkfile_args(0))],
             ),
             SubTest(
                 name="Test 2",
                 description='File: %s' % os.path.basename(self.__test_file[1]),
                 args={'vtt_path': self.__test_file[1] + self.__vtt},
                 object=VTTtoSRT(prefix=self.__prefix),
-                middlewares_after=[lambda: self.check_file(**self.__get_checkfile_args(1))],
+                middlewares_after=[lambda: self.__check_file(**self.__get_checkfile_args(1))],
             ),
             SubTest(
                 name="Test 3",

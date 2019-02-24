@@ -1,6 +1,8 @@
 import os
 import sqlite3
 
+from crawler import utils
+
 
 class DBSqlLiteCache:
     """
@@ -24,7 +26,8 @@ class DBSqlLiteCache:
       scrapped boolean,
       downloaded boolean,
       priority float,
-      description text
+      full_description text,
+      short_description text
     );'''
 
     __sql_query_create_videos = '''
@@ -37,40 +40,40 @@ class DBSqlLiteCache:
       description text
     );'''
 
-    # __sql_update_channel = '''
-    # update %s
-    # set
-    #   channel_id=?,
-    #   valid=?,
-    #   scrapped=?,
-    #   downloaded=?,
-    #   priority=?,
-    #   full_description=?,
-    #   short_description=?
-    # where channel_id=?;
-    # ''' % __sql_query_create_channel
-
     __sql_update_channel = '''
-    update videos 
+    update channels
     set
-      channel_id=?;
+      channel_id=?,
+      valid=?,
+      scrapped=?,
+      downloaded=?,
+      priority=?,
+      full_description=?,
+      short_description=?
+    where channel_id=?;
     '''
 
     __sql_insert_channel = '''
-    insert into channels(channel_id) 
-    values(?)
+    insert into channels(
+      channel_id,
+      valid, 
+      scrapped, 
+      downloaded, 
+      priority, 
+      full_description, 
+      short_description
+    ) 
+    values(?, ?, ?, ?, ?, ?, ?)
     '''
 
-    __sql_select_channel = '''
-    select channel_id from channels 
+    __sql_select_exist_channel = '''
+    select channel_id from channels where channel_id=? 
     '''
 
     def __create_db(self, conn):
-        c = conn.cursor()
-        c.execute(self.__sql_query_create_channel)
-        c.execute(self.__sql_query_create_videos)
+        conn.execute(self.__sql_query_create_channel)
+        conn.execute(self.__sql_query_create_videos)
         conn.commit()
-        c.close()
 
     def __init__(self, path='data/db.sqlite', hard=False):
         if hard and os.path.exists(path):
@@ -102,16 +105,32 @@ class DBSqlLiteCache:
 
     @staticmethod
     def __create_args_update_channels(channel, scrapped, valid):
-        return (
+        return [
             channel['channel_id'],
-            # valid,
-            # scrapped,
-            # False,
-            # channel['priority'],
-            # channel['full_description'],
-            # channel['short_description'],
-            # channel['channel_id']
-        )
+            valid,
+            scrapped,
+            False,
+            channel['priority'],
+            channel['full_description'],
+            channel['short_description']
+        ]
+
+    @staticmethod
+    def __deduplicate_channels(channels):
+        s = set()
+        error = None
+        output_channels = []
+        for channel in channels:
+            if channel['channel_id'] not in s:
+                output_channels.append(channel)
+                s.add(channel['channel_id'])
+                continue
+            error = utils.CacheError(
+                channel_id=channel['channel_id'],
+                msg="This channel already exists into input channels",
+                e=error
+            )
+        return output_channels, error
 
     def update_channels(self, channels, scrapped, valid):
         """
@@ -121,20 +140,24 @@ class DBSqlLiteCache:
             * valid==False, scrapped==False, downloaded==False
         If you want got more information, see class description
         """
+
         conn = sqlite3.connect(self.db_path)
-        c = conn.cursor()
-        errors = []
+        channels, error = self.__deduplicate_channels(channels)
         for channel in channels:
-            c.execute(self.__sql_select_channel)
-            args = self.__create_args_update_channels(channel, scrapped, valid)
-            query = self.__sql_insert_channel
+            c = conn.cursor()
+            c.execute(self.__sql_select_exist_channel, (channel['channel_id']))
             res = c.fetchone()
+            c.close()
+            query = self.__sql_insert_channel
+            args = self.__create_args_update_channels(channel, scrapped, valid)
             if res is not None and len(res) != 0:
-                errors.append("")
+                error = utils.CacheError(channel_id=channel['channel_id'], msg="This channel already exists", e=error)
                 query = self.__sql_update_channel
+                args.append(channel['channel_id'])
             conn.execute(query, args)
         conn.commit()
-        c.close()
+        conn.close()
+        return error
 
     def get_best_channel_id(self):
         raise Exception("Not implemented")

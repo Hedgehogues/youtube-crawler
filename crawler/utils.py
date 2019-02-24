@@ -8,23 +8,22 @@ class CrawlerExceptions(Exception):
     def __init__(self, msg="", e=None):
         self.msg = msg
         self.e = e
-        if e is CrawlerExceptions:
-            self.e = e
 
     def __add__(self, other):
         self.msg += other
 
     def __recursion(self, e):
-        e_ = []
-        if e is CrawlerExceptions:
-            e_ = [self] + self.__recursion(self.e)
-        return e_
+        if type(e) is CrawlerExceptions:
+            msg = self.__recursion(e.e)
+            return "%s" % self.msg if len(msg) == 0 else "%s:%s -> %s" % (type(e), e.msg, msg)
+        if e is None:
+            return ""
+        return "%s:%s" % (type(e), e.__str__())
 
     def get_stack_errors(self):
-        e = []
-        if self.e is CrawlerExceptions:
-            e = [self] + self.__recursion(self.e)
-        return e
+        if type(self.e) is CrawlerExceptions:
+            return "Stack trace: %s:%s -> %s" % (type(self), self.msg, self.__recursion(self.e))
+        return "%s:%s" % (type(self), self.__str__())
 
 
 class DownloadError(CrawlerExceptions):
@@ -89,11 +88,15 @@ class ScrapperError(CrawlerExceptions):
         super().__init__("Scrapper was failed. ChannelId: %s" % channel_id, e)
 
 
-class CacheGetChannelsError(CrawlerExceptions):
+class CacheError(CrawlerExceptions):
     """There is problem with getting channels from Cache. This exception is generated of Cache
     """
-    def __init__(self, msg="", e=None):
-        super().__init__("Problem with getting channels from Cache. %s" % msg, e)
+    def __init__(self, video_id=None, channel_id=None, msg="", e=None):
+        if video_id is not None and len(video_id) != 0:
+            msg += ". Video_id: %s" % video_id
+        if channel_id is not None and len(channel_id) != 0:
+            msg += ". Channel_id: %s" % channel_id
+        super().__init__("Problem with cache. %s" % msg, e)
 
 
 class ExtensionError(CrawlerExceptions):

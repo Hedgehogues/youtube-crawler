@@ -1,6 +1,7 @@
 import os
 import sqlite3
 
+from crawler import utils
 from crawler.cache import DBSqlLiteCache
 from tests.utils import BaseTestClass, SubTest
 
@@ -60,6 +61,29 @@ class TestDBSqlLiteCache(BaseTestClass):
         self.update_channels_tests = [
             SubTest(
                 name="Test 1",
+                description="All fields are not None",
+                args={
+                    'channels': [
+                        {
+                            'channel_id': 'X',
+                            'priority': 0,
+                            'full_description': 'X',
+                            'short_description': 'Y',
+                        }
+                    ],
+                    'scrapped': False,
+                    'valid': False
+                },
+                object=DBSqlLiteCache(path=self.__db_path+'1', hard=True),
+                middlewares_before=[],
+                middlewares_after=[
+                    lambda: self.__check_db_count_rows(self.__db_path+'1', 1, 'channels'),
+                    lambda: self.__remove_filename(self.__db_path+'1')
+                ],
+            ),
+            SubTest(
+                name="Test 2",
+                description="Some fields are None",
                 args={
                     'channels': [
                         {
@@ -72,21 +96,119 @@ class TestDBSqlLiteCache(BaseTestClass):
                     'scrapped': False,
                     'valid': False
                 },
-                object=DBSqlLiteCache(path=self.__db_path, hard=True),
+                object=DBSqlLiteCache(path=self.__db_path+'2', hard=True),
                 middlewares_before=[],
                 middlewares_after=[
-                    lambda: self.__check_db_count_rows(1, 'channels'),
-                    lambda: self.__remove_filename(self.__db_path)
+                    lambda: self.__check_db_count_rows(self.__db_path+'2', 1, 'channels'),
+                    lambda: self.__remove_filename(self.__db_path+'2')
+                ],
+            ),
+            SubTest(
+                name="Test 3",
+                description="Two channel per transaction",
+                args={
+                    'channels': [
+                        {
+                            'channel_id': 'X',
+                            'priority': 0,
+                            'full_description': None,
+                            'short_description': None,
+                        },
+                        {
+                            'channel_id': 'Y',
+                            'priority': 0,
+                            'full_description': None,
+                            'short_description': None,
+                        }
+                    ],
+                    'scrapped': False,
+                    'valid': False
+                },
+                object=DBSqlLiteCache(path=self.__db_path+'3', hard=True),
+                middlewares_before=[],
+                middlewares_after=[
+                    lambda: self.__check_db_count_rows(self.__db_path+'3', 2, 'channels'),
+                    lambda: self.__remove_filename(self.__db_path+'3')
+                ],
+            ),
+            SubTest(
+                name="Test 4",
+                description="Duplicate channel id into inputs",
+                args={
+                    'channels': [
+                        {
+                            'channel_id': 'X',
+                            'priority': 0,
+                            'full_description': None,
+                            'short_description': None,
+                        },
+                        {
+                            'channel_id': 'X',
+                            'priority': 0,
+                            'full_description': None,
+                            'short_description': None,
+                        }
+                    ],
+                    'scrapped': False,
+                    'valid': False
+                },
+                object=DBSqlLiteCache(path=self.__db_path+'4', hard=True),
+                want=utils.CacheError(channel_id='X', msg="This channel already exists into input channels"),
+                middlewares_before=[],
+                middlewares_after=[
+                    lambda: self.__check_db_count_rows(self.__db_path+'4', 1, 'channels'),
+                    lambda: self.__remove_filename(self.__db_path+'4')
+                ],
+            ),
+            SubTest(
+                name="Test 5",
+                description="Two channel per transaction",
+                args={
+                    'channels': [
+                        {
+                            'channel_id': 'X',
+                            'priority': 0,
+                            'full_description': None,
+                            'short_description': None,
+                        },
+                        {
+                            'channel_id': 'Y',
+                            'priority': 0,
+                            'full_description': None,
+                            'short_description': None,
+                        }
+                    ],
+                    'scrapped': False,
+                    'valid': False
+                },
+                object=DBSqlLiteCache(path=self.__db_path+'5', hard=True),
+                want=utils.CacheError(channel_id='X', msg="This channel already exists"),
+                middlewares_before=[
+                    lambda: self.__set_rows_channels(self.__db_path+'5', ['X', 'P'], 'channels')
+                ],
+                middlewares_after=[
+                    lambda: self.__check_db_count_rows(self.__db_path+'5', 3, 'channels'),
+                    lambda: self.__remove_filename(self.__db_path+'5')
                 ],
             ),
         ]
 
-    def __check_db_count_rows(self, assert_count, table_name):
-        conn = sqlite3.connect(self.__db_path)
+    @staticmethod
+    def __set_rows_channels(db_path, channel_ids, table_name):
+        conn = sqlite3.connect(db_path)
+        for channel_id in channel_ids:
+            conn.execute('insert into %s(channel_id) values(?)' % table_name, (channel_id))
+        conn.commit()
+        conn.close()
+
+    def __check_db_count_rows(self, db_path, assert_count, table_name):
+        conn = sqlite3.connect(db_path)
         c = conn.cursor()
-        c.execute('select * from %s' % table_name)
-        x = c.fetchall()
-        self.assertEqual(assert_count, len(x))
+        c.execute('select count(*) from %s' % table_name)
+        res = c.fetchone()
+        if res is None:
+            self.fail()
+        self.assertEqual(assert_count, res[0])
         c.close()
         conn.close()
 
