@@ -2,6 +2,7 @@ import os
 import sqlite3
 
 from crawler import utils
+from crawler.simple_logger import SimpleLogger
 
 
 class DBSqlLiteCache:
@@ -75,9 +76,13 @@ class DBSqlLiteCache:
         conn.execute(self.__sql_query_create_videos)
         conn.commit()
 
-    def __init__(self, path='data/db.sqlite', hard=False):
+    def __init__(self, path='data/db.sqlite', hard=False, logger=None):
         if hard and os.path.exists(path):
             os.remove(path)
+
+        self.logger = logger
+        if self.logger is None:
+            self.logger = SimpleLogger()
 
         if os.path.exists(path):
             raise FileExistsError("Data base already exist. Path: %s" % os.path.abspath(path))
@@ -115,22 +120,18 @@ class DBSqlLiteCache:
             channel['short_description']
         ]
 
-    @staticmethod
-    def __deduplicate_channels(channels):
+    def __deduplicate_channels(self, channels):
         s = set()
-        error = None
         output_channels = []
         for channel in channels:
             if channel['channel_id'] not in s:
                 output_channels.append(channel)
                 s.add(channel['channel_id'])
                 continue
-            error = utils.CacheError(
-                channel_id=channel['channel_id'],
-                msg="This channel already exists into input channels",
-                e=error
-            )
-        return output_channels, error
+            msg = "This channel already exists into input channels"
+            warn = utils.CacheError(channel_id=channel['channel_id'], msg=msg)
+            self.logger.warn(warn)
+        return output_channels
 
     def update_channels(self, channels, scrapped, valid):
         """
@@ -141,23 +142,30 @@ class DBSqlLiteCache:
         If you want got more information, see class description
         """
 
-        conn = sqlite3.connect(self.db_path)
-        channels, error = self.__deduplicate_channels(channels)
-        for channel in channels:
-            c = conn.cursor()
-            c.execute(self.__sql_select_exist_channel, (channel['channel_id']))
-            res = c.fetchone()
-            c.close()
-            query = self.__sql_insert_channel
-            args = self.__create_args_update_channels(channel, scrapped, valid)
-            if res is not None and len(res) != 0:
-                error = utils.CacheError(channel_id=channel['channel_id'], msg="This channel already exists", e=error)
-                query = self.__sql_update_channel
-                args.append(channel['channel_id'])
-            conn.execute(query, args)
-        conn.commit()
-        conn.close()
-        return error
+        channel_id = None
+        try:
+            conn = sqlite3.connect(self.db_path)
+            channels = self.__deduplicate_channels(channels)
+            for channel in channels:
+                channel_id = channel['channel_id']
+                c = conn.cursor()
+                c.execute(self.__sql_select_exist_channel, channel_id)
+                res = c.fetchone()
+                c.close()
+                query = self.__sql_insert_channel
+                args = self.__create_args_update_channels(channel, scrapped, valid)
+                if res is not None and len(res) != 0:
+                    warn = utils.CacheError(channel_id=channel_id, msg="This channel already exists")
+                    self.logger.warn(warn)
+                    query = self.__sql_update_channel
+                    args.append(channel_id)
+                conn.execute(query, args)
+            conn.commit()
+            conn.close()
+        except sqlite3.Error as e:
+            return utils.CacheError(channel_id=channel_id, msg="Problem with data base", e=e)
+        except Exception as e:
+            return utils.CacheError(channel_id=channel_id, msg="Unexpected exception", e=e)
 
     def get_best_channel_id(self):
         raise Exception("Not implemented")

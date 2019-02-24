@@ -3,6 +3,7 @@ import sqlite3
 
 from crawler import utils
 from crawler.cache import DBSqlLiteCache
+from tests import MockLogger
 from tests.utils import BaseTestClass, SubTest
 
 
@@ -152,8 +153,7 @@ class TestDBSqlLiteCache(BaseTestClass):
                     'scrapped': False,
                     'valid': False
                 },
-                object=DBSqlLiteCache(path=self.__db_path+'4', hard=True),
-                want=utils.CacheError(channel_id='X', msg="This channel already exists into input channels"),
+                object=DBSqlLiteCache(path=self.__db_path+'4', hard=True, logger=MockLogger()),
                 middlewares_before=[],
                 middlewares_after=[
                     lambda: self.__check_db_count_rows(self.__db_path+'4', 1, 'channels'),
@@ -181,8 +181,7 @@ class TestDBSqlLiteCache(BaseTestClass):
                     'scrapped': False,
                     'valid': False
                 },
-                object=DBSqlLiteCache(path=self.__db_path+'5', hard=True),
-                want=utils.CacheError(channel_id='X', msg="This channel already exists"),
+                object=DBSqlLiteCache(path=self.__db_path+'5', hard=True, logger=MockLogger()),
                 middlewares_before=[
                     lambda: self.__set_rows_channels(self.__db_path+'5', ['X', 'P'], 'channels')
                 ],

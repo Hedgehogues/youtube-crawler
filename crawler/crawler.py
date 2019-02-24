@@ -140,7 +140,6 @@ class YoutubeCrawler:
         while channel_id is not None:
             self._info("Scrappy channelId: %s" % channel_id)
             full_descr, err = self._apply(lambda: self.__scraper.parse(channel_id))
-            self._warn(err, utils.ScrapperError(channel_id=channel_id, e=err))
             channel = self.__create_cur_channel(channel_id, full_descr, None)
             if err is not None:
                 err = self.__cache.update_channels(channel, scrapped=False, valid=False)
@@ -149,12 +148,15 @@ class YoutubeCrawler:
 
             # Setting current channel into Cache. ChannelId
             err = self.__cache.update_channels(channel, scrapped=True, valid=True)
-            self._error(err, err + self.__crash_msg % ("ChannelIds", ch_ids_str))
+            if err is not None:
+                err = self.__cache.update_channels(channel, scrapped=False, valid=False)
+                self._error(err, err + self.__crash_msg % ("ChannelId", channel_id))
+                continue
 
             # Setting neighbours channels into Cache. ChannelId
             neighb_channels = self.__get_neighb_channels(full_descr)
-            ch_ids_str = ','.join([ch['id'] for ch in neighb_channels])
             err = self.__cache.update_channels(neighb_channels, scrapped=False, valid=True)
+            ch_ids_str = ','.join([ch['id'] for ch in neighb_channels])
             self._error(err, err + self.__crash_msg % ("ChannelIds", ch_ids_str))
 
             # Downloading youtube for ChannelId

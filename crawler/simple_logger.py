@@ -1,22 +1,14 @@
-from crawler import utils
-
-
 class SimpleLogger:
-    def __get_stack_err(self, err):
-        stack_err = None
-        if err is utils.CrawlerExceptions:
-            stack_err = err.get_stack_errors()
-        return stack_err
 
     def info(self, msg):
         print("[INFO]: %s", msg)
 
     def warn(self, err):
-        print("[WARN]: %s. StackError: %x" % (err.msg, self.__get_stack_err(err)))
+        print("[WARN]: %s. StackError: %s" % (err.msg, err.get_stack_errors()))
 
     def alert(self, err):
-        print("[ALERT]: %s. StackError: %x" % (err.msg, self.__get_stack_err(err)))
+        print("[ALERT]: %s. StackError: %s" % (err.msg, err.get_stack_errors()))
 
     def error(self, err):
-        print("[ERROR]: %s. StackError: %x" % (err.msg, self.__get_stack_err(err)))
+        print("[ERROR]: %s. StackError: %s" % (err.msg, err.get_stack_errors()))
         raise err
