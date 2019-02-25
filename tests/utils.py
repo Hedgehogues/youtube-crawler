@@ -19,15 +19,11 @@ class BaseTestClass(unittest.TestCase):
             self.assertEqual(0, len(x), msg=msg)
 
     def __exception(self, obj, kwargs, exception, func):
-        is_exception = False
-        try:
-            func(obj, kwargs)
-        except Exception as e:
-            is_exception = True
-            self.assertEqual(type(e), exception)
-        self.assertTrue(is_exception)
+        self.assertRaises(exception, func, obj, kwargs)
 
     def apply_test(self, test, func):
+        if test.fail:
+            self.fail()
         kwargs = test.args
         want = test.want
         obj = test.object
@@ -62,6 +58,7 @@ class SubTest:
         Into middleware available all unittests methods. Response from middleware not processed
     :param middlewares_before (list): list of middlewares functions which execute after finished function.
         Into middleware available all unittests methods. Response from middleware not processed
+    :param fail (bool): is true, then test will be fail
     self.configuration = self.fill('configuration', None, kwargs)
     """
 
@@ -83,6 +80,7 @@ class SubTest:
         self.middlewares_before = self.fill('middlewares_before', [], kwargs)
         self.middlewares_after = self.fill('middlewares_after', [], kwargs)
         self.configuration = self.fill('configuration', None, kwargs)
+        self.fail = self.fill('fail', False, kwargs)
 
     @staticmethod
     def fill(k, r, kwargs):

@@ -59,7 +59,7 @@ class TestDBSqlLiteCache(BaseTestClass):
             ),
         ]
 
-        self.update_channels_tests = [
+        self.set_channels_tests = [
             SubTest(
                 name="Test 1",
                 description="All fields are not None",
@@ -190,6 +190,153 @@ class TestDBSqlLiteCache(BaseTestClass):
                     lambda: self.__remove_filename(self.__db_path+'5')
                 ],
             ),
+            SubTest(
+                name="Test 6",
+                description="Invalid fields exception",
+                args={
+                    'channels': [None],
+                    'scrapped': False,
+                    'valid': False
+                },
+                object=DBSqlLiteCache(path=self.__db_path+'6', hard=True, logger=MockLogger()),
+                exception=Exception,
+                middlewares_after=[lambda: self.__remove_filename(self.__db_path+'6')],
+            ),
+            SubTest(
+                name="Test 7",
+                description="Invalid database type",
+                args={
+                    'channels': [
+                        {
+                            'channel_id': 'X',
+                            'priority': [],
+                            'full_description': None,
+                            'short_description': None,
+                        }
+                    ],
+                    'scrapped': False,
+                    'valid': False
+                },
+                object=DBSqlLiteCache(path=self.__db_path+'7', hard=True, logger=MockLogger()),
+                exception=sqlite3.Error,
+                middlewares_after=[
+                    lambda: self.__remove_filename(self.__db_path+'7')
+                ],
+            ),
+            SubTest(
+                name="Test 8",
+                description="Empty",
+                args={
+                    'channels': [],
+                    'scrapped': False,
+                    'valid': False
+                },
+                object=DBSqlLiteCache(path=self.__db_path+'8', hard=True, logger=MockLogger()),
+                middlewares_after=[
+                    lambda: self.__check_db_count_rows(self.__db_path+'8', 0, 'channels'),
+                    lambda: self.__remove_filename(self.__db_path+'8')
+                ],
+            ),
+            SubTest(
+                name="Test 9",
+                description="Base_channel fail should not be changed",
+                fail=True,
+                args={'channels_id': []},
+                object=DBSqlLiteCache(path=self.__db_path+'8', hard=True, logger=MockLogger()),
+                middlewares_after=[
+                    lambda: self.__check_db_count_rows(self.__db_path+'7', 0, 'channels'),
+                    lambda: self.__remove_filename(self.__db_path+'8')
+                ],
+            ),
+        ]
+
+        self.set_base_channels_tests = [
+            SubTest(
+                name="Test 1",
+                description="All fields are not None",
+                args={'channels_id': ['X']},
+                object=DBSqlLiteCache(path=self.__db_path+'1', hard=True),
+                middlewares_before=[],
+                middlewares_after=[
+                    lambda: self.__check_db_count_rows(self.__db_path+'1', 1, 'channels'),
+                    lambda: self.__remove_filename(self.__db_path+'1')
+                ],
+            ),
+            SubTest(
+                name="Test 2",
+                description="Some fields are None",
+                args={'channels_id': ['X']},
+                object=DBSqlLiteCache(path=self.__db_path+'2', hard=True),
+                middlewares_before=[],
+                middlewares_after=[
+                    lambda: self.__check_db_count_rows(self.__db_path+'2', 1, 'channels'),
+                    lambda: self.__remove_filename(self.__db_path+'2')
+                ],
+            ),
+            SubTest(
+                name="Test 3",
+                description="Two channel per transaction",
+                args={'channels_id': ['X', 'Y']},
+                object=DBSqlLiteCache(path=self.__db_path+'3', hard=True),
+                middlewares_before=[],
+                middlewares_after=[
+                    lambda: self.__check_db_count_rows(self.__db_path+'3', 2, 'channels'),
+                    lambda: self.__remove_filename(self.__db_path+'3')
+                ],
+            ),
+            SubTest(
+                name="Test 4",
+                description="Duplicate channel id into inputs",
+                args={'channels_id': ['X', 'X']},
+                object=DBSqlLiteCache(path=self.__db_path+'4', hard=True, logger=MockLogger()),
+                middlewares_before=[],
+                middlewares_after=[
+                    lambda: self.__check_db_count_rows(self.__db_path+'4', 1, 'channels'),
+                    lambda: self.__remove_filename(self.__db_path+'4')
+                ],
+            ),
+            SubTest(
+                name="Test 5",
+                description="Two channel per transaction",
+                args={'channels_id': ['X', 'Y']},
+                object=DBSqlLiteCache(path=self.__db_path+'5', hard=True, logger=MockLogger()),
+                middlewares_before=[
+                    lambda: self.__set_rows_channels(self.__db_path+'5', ['X', 'P'], 'channels')
+                ],
+                middlewares_after=[
+                    lambda: self.__check_db_count_rows(self.__db_path+'5', 3, 'channels'),
+                    lambda: self.__remove_filename(self.__db_path+'5')
+                ],
+            ),
+            SubTest(
+                name="Test 6",
+                description="Invalid fields exception",
+                args={'channels_id': [None]},
+                object=DBSqlLiteCache(path=self.__db_path+'6', hard=True, logger=MockLogger()),
+                exception=Exception,
+                middlewares_after=[lambda: self.__remove_filename(self.__db_path+'6')],
+            ),
+            SubTest(
+                name="Test 7",
+                description="Empty",
+                args={'channels_id': []},
+                object=DBSqlLiteCache(path=self.__db_path+'7', hard=True, logger=MockLogger()),
+                middlewares_after=[
+                    lambda: self.__check_db_count_rows(self.__db_path+'7', 0, 'channels'),
+                    lambda: self.__remove_filename(self.__db_path+'7')
+                ],
+            ),
+            SubTest(
+                name="Test 8",
+                description="Existing entries should not be updated",
+                fail=True,
+                args={'channels_id': []},
+                object=DBSqlLiteCache(path=self.__db_path+'8', hard=True, logger=MockLogger()),
+                middlewares_after=[
+                    lambda: self.__check_db_count_rows(self.__db_path+'7', 0, 'channels'),
+                    lambda: self.__remove_filename(self.__db_path+'8')
+                ],
+            ),
         ]
 
     @staticmethod
@@ -215,6 +362,10 @@ class TestDBSqlLiteCache(BaseTestClass):
         for test in self.constructor_tests:
             self.apply_test(test, lambda obj, kwargs: obj(**kwargs))
 
-    def test_update_channels(self):
-        for test in self.update_channels_tests:
-            self.apply_test(test, lambda obj, kwargs: obj.update_channels(**kwargs))
+    def test_set_channels(self):
+        for test in self.set_channels_tests:
+            self.apply_test(test, lambda obj, kwargs: obj.set_channels(**kwargs))
+
+    def test_set_base_channels(self):
+        for test in self.set_base_channels_tests:
+            self.apply_test(test, lambda obj, kwargs: obj.set_base_channels(**kwargs))

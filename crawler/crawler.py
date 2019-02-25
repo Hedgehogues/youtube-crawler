@@ -129,7 +129,7 @@ class YoutubeCrawler:
 
     def process(self, channel_ids=None):
         self._info("Setting channel ids from arguments into Cache")
-        err = self.__cache.set_empty_channels(channel_ids)
+        err = self.__cache.set_base_channels(channel_ids)
         ch_ids_str = ','.join(channel_ids)
         self._alert(err, err + "%s: [%s]" % ("ChannelIds", ch_ids_str))
 
@@ -139,23 +139,26 @@ class YoutubeCrawler:
 
         while channel_id is not None:
             self._info("Scrappy channelId: %s" % channel_id)
+            # Extract full_descr
             full_descr, err = self._apply(lambda: self.__scraper.parse(channel_id))
-            channel = self.__create_cur_channel(channel_id, full_descr, None)
-            if err is not None:
-                err = self.__cache.update_channels(channel, scrapped=False, valid=False)
-                self._error(err, err + self.__crash_msg % ("ChannelId", channel_id))
+            try:
+                channel = self.__create_cur_channel(channel_id, full_descr, None)
+            except Exception as e:
+                self.__cache.set_failed_channel(channel_id)
+                self._error(e, e)
                 continue
 
             # Setting current channel into Cache. ChannelId
-            err = self.__cache.update_channels(channel, scrapped=True, valid=True)
-            if err is not None:
-                err = self.__cache.update_channels(channel, scrapped=False, valid=False)
-                self._error(err, err + self.__crash_msg % ("ChannelId", channel_id))
+            try:
+                self.__cache.set_channels(channel, scrapped=True, valid=True)
+            except Exception as e:
+                self.__cache.set_failed_channel(channel_id)
+                self._error(e, e)
                 continue
 
             # Setting neighbours channels into Cache. ChannelId
             neighb_channels = self.__get_neighb_channels(full_descr)
-            err = self.__cache.update_channels(neighb_channels, scrapped=False, valid=True)
+            err = self.__cache.set_channels(neighb_channels, scrapped=False, valid=True)
             ch_ids_str = ','.join([ch['id'] for ch in neighb_channels])
             self._error(err, err + self.__crash_msg % ("ChannelIds", ch_ids_str))
 
