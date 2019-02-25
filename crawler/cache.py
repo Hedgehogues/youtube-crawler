@@ -44,7 +44,7 @@ class DBSqlLiteCache:
     __sql_query_create_channel = '''
     create table channels (
       channel_id text PRIMARY KEY,
-      base_channel boolean,
+      base_channel boolean DEFAULT FALSE,
       valid boolean,
       scrapped boolean,
       downloaded boolean,

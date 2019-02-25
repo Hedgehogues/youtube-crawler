@@ -1,7 +1,6 @@
 import os
 import sqlite3
 
-from crawler import utils
 from crawler.cache import DBSqlLiteCache
 from tests import MockLogger
 from tests.utils import BaseTestClass, SubTest
@@ -239,13 +238,35 @@ class TestDBSqlLiteCache(BaseTestClass):
             ),
             SubTest(
                 name="Test 9",
-                description="Base_channel fail should not be changed",
-                fail=True,
-                args={'channels_id': []},
-                object=DBSqlLiteCache(path=self.__db_path+'8', hard=True, logger=MockLogger()),
+                description="Base_channel should not be changed",
+                args={
+                    'channels': [
+                        {
+                            'channel_id': 'X',
+                            'priority': 0,
+                            'full_description': None,
+                            'short_description': None,
+                        },
+                        {
+                            'channel_id': 'Y',
+                            'priority': 0,
+                            'full_description': None,
+                            'short_description': None,
+                        }
+                    ],
+                    'scrapped': False,
+                    'valid': False
+                },
+                object=DBSqlLiteCache(path=self.__db_path+'9', hard=True, logger=MockLogger()),
+                middlewares_before=[
+                    lambda: self.__set_rows_channels(self.__db_path+'9', ['X', 'P'], 'channels', True)
+                ],
                 middlewares_after=[
-                    lambda: self.__check_db_count_rows(self.__db_path+'7', 0, 'channels'),
-                    lambda: self.__remove_filename(self.__db_path+'8')
+                    lambda: self.__check_base_channel(self.__db_path+'9', True, 'channels', 'X'),
+                    lambda: self.__check_base_channel(self.__db_path + '9', True, 'channels', 'P'),
+                    lambda: self.__check_base_channel(self.__db_path + '9', False, 'channels', 'Y'),
+                    lambda: self.__check_db_count_rows(self.__db_path+'9', 3, 'channels'),
+                    lambda: self.__remove_filename(self.__db_path+'9')
                 ],
             ),
         ]
@@ -329,22 +350,38 @@ class TestDBSqlLiteCache(BaseTestClass):
             SubTest(
                 name="Test 8",
                 description="Existing entries should not be updated",
-                fail=True,
-                args={'channels_id': []},
+                args={'channels_id': ["X", "Y"]},
                 object=DBSqlLiteCache(path=self.__db_path+'8', hard=True, logger=MockLogger()),
+                middlewares_before=[
+                    lambda: self.__set_rows_channels(self.__db_path + '8', ['X', 'P'], 'channels')
+                ],
                 middlewares_after=[
-                    lambda: self.__check_db_count_rows(self.__db_path+'7', 0, 'channels'),
+                    lambda: self.__check_base_channel(self.__db_path+'8', False, 'channels', 'X'),
+                    lambda: self.__check_base_channel(self.__db_path + '8', True, 'channels', 'Y'),
+                    lambda: self.__check_db_count_rows(self.__db_path + '8', 3, 'channels'),
                     lambda: self.__remove_filename(self.__db_path+'8')
                 ],
             ),
         ]
 
     @staticmethod
-    def __set_rows_channels(db_path, channel_ids, table_name):
+    def __set_rows_channels(db_path, channel_ids, table_name, base_channel=False):
         conn = sqlite3.connect(db_path)
+        query = 'insert into %s(channel_id, base_channel) values(?, ?)' % table_name
         for channel_id in channel_ids:
-            conn.execute('insert into %s(channel_id) values(?)' % table_name, (channel_id))
+            conn.execute(query, (channel_id, base_channel))
         conn.commit()
+        conn.close()
+
+    def __check_base_channel(self, db_path, base_channel_value, table_name, channel_id):
+        conn = sqlite3.connect(db_path)
+        c = conn.cursor()
+        query = 'select * from %s where channel_id=?' % table_name
+        c.execute(query, (channel_id,))
+        res = c.fetchone()
+        self.assertIsNotNone(res)
+        self.assertEqual(base_channel_value, bool(res[1]))
+        c.close()
         conn.close()
 
     def __check_db_count_rows(self, db_path, assert_count, table_name):
@@ -352,8 +389,7 @@ class TestDBSqlLiteCache(BaseTestClass):
         c = conn.cursor()
         c.execute('select count(*) from %s' % table_name)
         res = c.fetchone()
-        if res is None:
-            self.fail()
+        self.assertIsNotNone(res)
         self.assertEqual(assert_count, res[0])
         c.close()
         conn.close()
