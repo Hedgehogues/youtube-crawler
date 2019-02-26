@@ -32,7 +32,7 @@ class DBSqlLiteCache:
             downloaded
         * valid==True, scrapped==False, downloaded==False. It means, that channel was got from another channel or as
             base channels. Some videos were not downloaded
-        * valid==False, scrapped==False, downloaded==False. It means, that channel is not valid
+        * valid==False, downloaded==False. It means, that channel is not valid
         * valid==False, scrapped==False, downloaded==True. It means, that channel has been completely download
         * base_channel is parameter means users_channel
     Any other configuration is not possible and wrong. Field description:
@@ -45,10 +45,10 @@ class DBSqlLiteCache:
     create table channels (
       channel_id text PRIMARY KEY,
       base_channel boolean DEFAULT FALSE,
-      valid boolean,
-      scrapped boolean,
-      downloaded boolean,
-      priority float,
+      valid boolean DEFAULT TRUE,
+      scrapped boolean DEFAULT FALSE,
+      downloaded boolean DEFAULT FALSE,
+      priority float DEFAULT 0,
       full_description text,
       short_description text
     );'''
@@ -98,6 +98,13 @@ class DBSqlLiteCache:
     values(?, ?, ?)
     '''
 
+    __sql_update_failed_channel = '''
+    update channels
+    set
+      valid=?
+    where channel_id=?;
+    '''
+
     __sql_select_exist_channel = '''
     select channel_id from channels where channel_id=? 
     '''
@@ -139,7 +146,7 @@ class DBSqlLiteCache:
         """
         This function process next cases:
             * valid==False, scrapped==False, downloaded==True
-        If you want got more information, see class description
+        If you want got more information, see c  lass description
         """
         raise Exception("Not implemented")
 
@@ -210,7 +217,16 @@ class DBSqlLiteCache:
         conn.close()
 
     def set_failed_channel(self, channel_id):
-        raise Exception("Not implemented")
+        """
+        This method set field valid as False. If there is not channel_id, then exceptions will be generated
+
+        :param channel_id: failed channel id (str)
+        :return:
+        """
+        conn = sqlite3.connect(self.db_path)
+        conn.execute(self.__sql_update_failed_channel, (False, channel_id))
+        conn.commit()
+        conn.close()
 
     def get_best_channel_id(self):
         """

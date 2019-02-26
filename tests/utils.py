@@ -1,4 +1,6 @@
 import json
+import os
+
 import deepdiff
 import unittest
 
@@ -20,6 +22,19 @@ class BaseTestClass(unittest.TestCase):
 
     def __exception(self, obj, kwargs, exception, func):
         self.assertRaises(exception, func, obj, kwargs)
+
+    def check_exist_file(self, filename):
+        self.assertTrue(os.path.exists(filename))
+
+    @staticmethod
+    def remove_filename(filename):
+        if os.path.exists(filename):
+            os.remove(filename)
+
+    @staticmethod
+    def create_filename(filename):
+        if not os.path.exists(filename):
+            open(filename, 'w').close()
 
     def apply_test(self, test, func):
         if test.fail:
