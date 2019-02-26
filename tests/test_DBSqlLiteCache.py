@@ -1,5 +1,6 @@
 import sqlite3
 
+from crawler import utils
 from crawler.cache import DBSqlLiteCache
 from tests import MockLogger
 from tests.utils import BaseTestClass, SubTest
@@ -9,22 +10,27 @@ class TestDBSqlLiteCache(BaseTestClass):
     db_path = 'data/test.sqlite'
 
     @staticmethod
-    def set_rows_channels(db_path, channel_ids, table_name, base_channel=False):
+    def set_rows_channels(db_path, channel_ids, table_name, base_channel=False, valid=True):
         conn = sqlite3.connect(db_path)
-        query = 'insert into %s(channel_id, base_channel) values(?, ?)' % table_name
+        query = 'insert into %s(channel_id, base_channel, valid) values(?, ?, ?)' % table_name
         for channel_id in channel_ids:
-            conn.execute(query, (channel_id, base_channel))
+            conn.execute(query, (channel_id, base_channel, valid))
         conn.commit()
         conn.close()
 
-    def check_base_channel(self, db_path, base_channel_value, table_name, channel_id):
+    def check_field(self, db_path, value, table_name, channel_id, field):
+        fields_indexes = {
+            'base_channel': 1,
+            'valid': 2,
+        }
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
         query = 'select * from %s where channel_id=?' % table_name
         c.execute(query, (channel_id,))
         res = c.fetchone()
         self.assertIsNotNone(res)
-        self.assertEqual(base_channel_value, bool(res[1]))
+        field_index = fields_indexes[field]
+        self.assertEqual(value, res[field_index])
         c.close()
         conn.close()
 
@@ -42,7 +48,7 @@ class TestDBSqlLiteCache(BaseTestClass):
 class TestDBSqlLiteCacheSetChannels(TestDBSqlLiteCache):
 
     def setUp(self):
-        self.set_channels_tests = [
+        self.tests = [
             SubTest(
                 name="Test 1",
                 description="All fields are not None",
@@ -246,24 +252,24 @@ class TestDBSqlLiteCacheSetChannels(TestDBSqlLiteCache):
                     lambda: self.set_rows_channels(self.db_path + '9', ['X', 'P'], 'channels', True)
                 ],
                 middlewares_after=[
-                    lambda: self.check_base_channel(self.db_path + '9', True, 'channels', 'X'),
-                    lambda: self.check_base_channel(self.db_path + '9', True, 'channels', 'P'),
-                    lambda: self.check_base_channel(self.db_path + '9', False, 'channels', 'Y'),
+                    lambda: self.check_field(self.db_path + '9', 1, 'channels', 'X', field='base_channel'),
+                    lambda: self.check_field(self.db_path + '9', 1, 'channels', 'P', field='base_channel'),
+                    lambda: self.check_field(self.db_path + '9', 0, 'channels', 'Y', field='base_channel'),
                     lambda: self.check_db_count_rows(self.db_path + '9', 3, 'channels'),
                     lambda: self.remove_filename(self.db_path + '9')
                 ],
             ),
         ]
 
-    def test_set_channels(self):
-        for test in self.set_channels_tests:
+    def test(self):
+        for test in self.tests:
             self.apply_test(test, lambda obj, kwargs: obj.set_channels(**kwargs))
 
 
 class TestDBSqlLiteCacheSetBaseChannels(TestDBSqlLiteCache):
 
     def setUp(self):
-        self.set_base_channels_tests = [
+        self.tests = [
             SubTest(
                 name="Test 1",
                 description="All fields are not None",
@@ -348,16 +354,16 @@ class TestDBSqlLiteCacheSetBaseChannels(TestDBSqlLiteCache):
                     lambda: self.set_rows_channels(self.db_path + '8', ['X', 'P'], 'channels')
                 ],
                 middlewares_after=[
-                    lambda: self.check_base_channel(self.db_path + '8', False, 'channels', 'X'),
-                    lambda: self.check_base_channel(self.db_path + '8', True, 'channels', 'Y'),
+                    lambda: self.check_field(self.db_path + '8', 0, 'channels', 'X', field='base_channel'),
+                    lambda: self.check_field(self.db_path + '8', 1, 'channels', 'Y', field='base_channel'),
                     lambda: self.check_db_count_rows(self.db_path + '8', 3, 'channels'),
                     lambda: self.remove_filename(self.db_path + '8')
                 ],
             ),
         ]
 
-    def test_set_base_channels(self):
-        for test in self.set_base_channels_tests:
+    def test(self):
+        for test in self.tests:
             self.apply_test(test, lambda obj, kwargs: obj.set_base_channels(**kwargs))
 
 
@@ -377,7 +383,7 @@ class TestDBSqlLiteCacheConstructor(TestDBSqlLiteCache):
         )
 
     def setUp(self):
-        self.constructor_tests = [
+        self.tests = [
             self.__create_subtest_constructor(
                 1,
                 False,
@@ -399,25 +405,42 @@ class TestDBSqlLiteCacheConstructor(TestDBSqlLiteCache):
             ),
         ]
 
-        # self.set_failed_channel_tests = [
-        #     SubTest(
-        #         name="Test 1",
-        #         args={'channels_id': ['X']},
-        #         object=DBSqlLiteCache(path=self.__db_path+'1', hard=True),
-        #         middlewares_before=[
-        #             lambda: self.__set_rows_channels(self.__db_path + '1', ['X', 'P'], 'channels'),
-        #         ],
-        #         middlewares_after=[
-        #             lambda: self.check_db_count_rows(self.__db_path+'1', 1, 'channels'),
-        #             lambda: self.__remove_filename(self.__db_path+'1')
-        #         ],
-        #     ),
-        # ]
-
-    def test___init__(self):
-        for test in self.constructor_tests:
+    def test(self):
+        for test in self.tests:
             self.apply_test(test, lambda obj, kwargs: obj(**kwargs))
 
-    # def test_set_failed_channel(self):
-    #     for test in self.set_failed_channel_tests:
-    #         self.apply_test(test, lambda obj, kwargs: obj.set_base_channels(**kwargs))
+
+class TestDBSqlLiteCacheSetFailedChannel(TestDBSqlLiteCache):
+
+    def setUp(self):
+        self.tests = [
+            SubTest(
+                name="Test 1",
+                description="Modify old value",
+                args={'channel_id': 'X'},
+                object=DBSqlLiteCache(path=self.db_path+'1', hard=True),
+                middlewares_before=[
+                    lambda: self.set_rows_channels(self.db_path + '1', ['X', 'P'], 'channels', valid=True),
+                ],
+                middlewares_after=[
+                    lambda: self.check_field(self.db_path + '1', 0, 'channels', 'X', field='valid'),
+                    lambda: self.check_field(self.db_path + '1', 1, 'channels', 'P', field='valid'),
+                    lambda: self.remove_filename(self.db_path+'1')
+                ],
+            ),
+            SubTest(
+                name="Test 2",
+                description="Exception undefined value",
+                args={'channel_id': 'Y'},
+                object=DBSqlLiteCache(path=self.db_path+'2', hard=True),
+                middlewares_before=[
+                    lambda: self.set_rows_channels(self.db_path + '2', ['X', 'P'], 'channels', valid=True),
+                ],
+                exception=utils.CacheError,
+                middlewares_after=[lambda: self.remove_filename(self.db_path+'2')],
+            ),
+        ]
+
+    def test(self):
+        for test in self.tests:
+            self.apply_test(test, lambda obj, kwargs: obj.set_failed_channel(**kwargs))

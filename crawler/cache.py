@@ -224,6 +224,8 @@ class DBSqlLiteCache:
         :return:
         """
         conn = sqlite3.connect(self.db_path)
+        if not self.__check_exist_channel_id(conn, channel_id):
+            raise utils.CacheError(channel_id=channel_id, msg="Not found channel in DB")
         conn.execute(self.__sql_update_failed_channel, (False, channel_id))
         conn.commit()
         conn.close()
