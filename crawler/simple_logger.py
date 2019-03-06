@@ -8,7 +8,7 @@ class SimpleLogger:
 
     def alert(self, err):
         print("[ALERT]: %s. StackError: %s" % (err.msg, err.get_stack_errors()))
+        raise err
 
     def error(self, err):
         print("[ERROR]: %s. StackError: %s" % (err.msg, err.get_stack_errors()))
-        raise err

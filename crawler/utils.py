@@ -1,4 +1,4 @@
-class CrawlerExceptions(Exception):
+class CrawlerError(Exception):
     """This is base exception of crawler. This exception is generated of Scrapper
 
     If you can catch this exception then all others exception is caught.
@@ -13,7 +13,7 @@ class CrawlerExceptions(Exception):
         self.msg += other
 
     def __recursion(self, e):
-        if type(e) is CrawlerExceptions:
+        if type(e) is CrawlerError:
             msg = self.__recursion(e.e)
             return "%s" % self.msg if len(msg) == 0 else "%s:%s -> %s" % (type(e), e.msg, msg)
         if e is None:
@@ -21,18 +21,18 @@ class CrawlerExceptions(Exception):
         return "%s:%s" % (type(e), e.__str__())
 
     def get_stack_errors(self):
-        if type(self.e) is CrawlerExceptions:
+        if type(self.e) is CrawlerError:
             return "Stack trace: %s:%s -> %s" % (type(self), self.msg, self.__recursion(self.e))
         return "%s:%s" % (type(self), self.__str__())
 
 
-class DownloadError(CrawlerExceptions):
+class DownloadError(CrawlerError):
     """ Downloading was failed """
     def __init__(self, msg, e=None):
         super().__init__(msg, e)
 
 
-class ReloadTokenError(CrawlerExceptions):
+class ReloadTokenError(CrawlerError):
     """ Token was not found or invalid
 
     This exception may be thrown when token for reload page not found or invalid
@@ -41,7 +41,7 @@ class ReloadTokenError(CrawlerExceptions):
         super().__init__(msg, e)
 
 
-class ParserError(CrawlerExceptions):
+class ParserError(CrawlerError):
     """
     Problem while parsing response
     """
@@ -49,7 +49,7 @@ class ParserError(CrawlerExceptions):
         super().__init__(msg, e)
 
 
-class JsonExtractionError(CrawlerExceptions):
+class JsonExtractionError(CrawlerError):
     """Json with data not found in a page. This exception is generated of Scrapper
 
     This exception may be thrown when one page of channel not contains
@@ -59,7 +59,7 @@ class JsonExtractionError(CrawlerExceptions):
         super().__init__(msg, e)
 
 
-class JsonSerializableError(CrawlerExceptions):
+class JsonSerializableError(CrawlerError):
     """Json with data not found in a page. This exception is generated of Scrapper
 
     This exception may be thrown when one page of channel consist not valid json
@@ -68,7 +68,7 @@ class JsonSerializableError(CrawlerExceptions):
         super().__init__(msg, e)
 
 
-class RequestError(CrawlerExceptions):
+class RequestError(CrawlerError):
     """Json with data not valid. This exception is generated of Scrapper
 
     This exception may be thrown when http-request is failed or
@@ -78,7 +78,7 @@ class RequestError(CrawlerExceptions):
         super().__init__(msg, e)
 
 
-class ScrapperError(CrawlerExceptions):
+class ScrapperError(CrawlerError):
     """Scrapper is crashed. This exception is generated of Crawler
 
     This exception denote crash of Scrapper. This exception is generated of Crawler
@@ -88,7 +88,7 @@ class ScrapperError(CrawlerExceptions):
         super().__init__("Scrapper was failed. ChannelId: %s" % channel_id, e)
 
 
-class CacheError(CrawlerExceptions):
+class CacheError(CrawlerError):
     """There is problem with getting channels from Cache. This exception is generated of Cache
     """
     def __init__(self, video_id=None, channel_id=None, msg="", e=None):
@@ -99,7 +99,7 @@ class CacheError(CrawlerExceptions):
         super().__init__("Problem with cache. %s" % msg, e)
 
 
-class ExtensionError(CrawlerExceptions):
+class ExtensionError(CrawlerError):
     """There is problem with extension of file. For instance, file has invalid extension
     """
     def __init__(self, ext, msg="", e=None):

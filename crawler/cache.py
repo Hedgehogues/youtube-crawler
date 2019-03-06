@@ -109,6 +109,10 @@ class DBSqlLiteCache:
     select channel_id from channels where channel_id=? 
     '''
 
+    __sql_select_exist_video = '''
+    select video_id from videos where video_id=? 
+    '''
+
     def __create_db(self, conn):
         conn.execute(self.__sql_query_create_channel)
         conn.execute(self.__sql_query_create_videos)
@@ -142,19 +146,20 @@ class DBSqlLiteCache:
             self.logger.warn(warn)
         return output_channels
 
-    def set_channel_downloaded(self, channel_id):
-        """
-        This function process next cases:
-            * valid==False, scrapped==False, downloaded==True
-        If you want got more information, see c  lass description
-        """
+    def set_failed_video(self, video):
         raise Exception("Not implemented")
 
     def set_video_descr(self, video):
         raise Exception("Not implemented")
 
-    def check_video_descr(self, video_id):
-        raise Exception("Not implemented")
+    def check_exist_video(self, video_id):
+        conn = sqlite3.connect(self.db_path)
+        c = conn.cursor()
+        c.execute(self.__sql_select_exist_video, video_id)
+        is_exist = c.fetchone()
+        c.close()
+        conn.close()
+        return is_exist
 
     def __check_exist_channel_id(self, conn, channel_id):
         c = conn.cursor()
@@ -226,6 +231,21 @@ class DBSqlLiteCache:
         conn = sqlite3.connect(self.db_path)
         if not self.__check_exist_channel_id(conn, channel_id):
             raise utils.CacheError(channel_id=channel_id, msg="Not found channel in DB")
+        conn.execute(self.__sql_update_failed_channel, (False, channel_id))
+        conn.commit()
+        conn.close()
+
+    def set_channel_downloaded(self, channel_id):
+        """
+        This function process next cases:
+            * valid==False, scrapped==False, downloaded==True
+        If you want got more information, see c  lass description
+        """
+        conn = sqlite3.connect(self.db_path)
+
+        if not self.__check_exist_channel_id(conn, channel_id):
+            raise utils.CacheError(channel_id=channel_id, msg="Not found channel in DB")
+
         conn.execute(self.__sql_update_failed_channel, (False, channel_id))
         conn.commit()
         conn.close()
