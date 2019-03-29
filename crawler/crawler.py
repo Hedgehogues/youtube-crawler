@@ -141,7 +141,7 @@ class YoutubeCrawler:
         while channel_id is not None:
             self.logger.info("Scrappy channelId: %s" % channel_id)
             try:
-                full_descr, err = self.scrappy_decorator(self.__scraper.parse, channel_id)
+                full_descr = self.scrappy_decorator(self.__scraper.parse, channel_id)
                 # Extract full_descr
                 channel = self.__create_cur_channel(channel_id, full_descr, None)
                 # Setting current channel into Cache. ChannelId
