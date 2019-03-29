@@ -33,7 +33,8 @@ class DBSqlLiteCache:
         * valid==True, scrapped==False, downloaded==False. It means, that channel was got from another channel or as
             base channels. Some videos were not downloaded
         * valid==False, downloaded==False. It means, that channel is not valid
-        * valid==False, scrapped==False, downloaded==True. It means, that channel has been completely download
+        * valid==False, scrapped==False, downloaded==True. It means, that channel has been completely download (included
+          video)
         * base_channel is parameter means users_channel
     Any other configuration is not possible and wrong. Field description:
         * field valid: if field sets True, then channel have not errors
