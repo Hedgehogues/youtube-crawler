@@ -165,6 +165,13 @@ class DBSqlLiteCache:
         raise Exception("Not implemented")
 
     def check_exist_video(self, video_id):
+        """
+        This method check exist video and returns True
+        if there is one or else another
+
+        :param video_id: video id
+        :return exist video (bool)
+        """
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
         c.execute(self.__sql_select_exist_video, video_id)
