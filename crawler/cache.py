@@ -104,6 +104,13 @@ class DBSqlLiteCache:
     where channel_id=?;
     '''
 
+    __sql_update_downloaded_channel = '''
+    update channels
+    set
+      downloaded=?
+    where channel_id=?;
+    '''
+
     __sql_select_exist_channel = '''
     select channel_id from channels where channel_id=? 
     '''
@@ -251,7 +258,7 @@ class DBSqlLiteCache:
         if not self.__check_exist_channel_id(conn, channel_id):
             raise utils.CacheError(channel_id=channel_id, msg="Not found channel in DB")
 
-        conn.execute(self.__sql_update_failed_channel, (False, channel_id))
+        conn.execute(self.__sql_update_downloaded_channel, (True, channel_id))
         conn.commit()
         conn.close()
 

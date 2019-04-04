@@ -25,6 +25,7 @@ class TestDBSqlLiteCache(BaseTestClass):
         fields_indexes = {
             'base_channel': 1,
             'valid': 2,
+            'downloaded': 4,
         }
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
@@ -449,6 +450,42 @@ class TestDBSqlLiteCacheSetFailedChannel(TestDBSqlLiteCache):
             self.apply_test(test, lambda obj, kwargs: obj.set_failed_channel(**kwargs))
 
 
+class TestDBSqlLiteCacheSetDownloadedChannel(TestDBSqlLiteCache):
+
+    def setUp(self):
+        self.tests = [
+            SubTest(
+                name="Test 1",
+                description="Modify old value",
+                args={'channel_id': 'X'},
+                object=DBSqlLiteCache(path=self.db_path+'1', hard=True),
+                middlewares_before=[
+                    lambda: self.set_rows_channels(self.db_path + '1', ['X', 'P'], 'channels', valid=True, downloaded=False),
+                ],
+                middlewares_after=[
+                    lambda: self.check_field(self.db_path + '1', 1, 'channels', 'X', field='downloaded'),
+                    lambda: self.check_field(self.db_path + '1', 0, 'channels', 'P', field='downloaded'),
+                    lambda: self.remove_filename(self.db_path+'1')
+                ],
+            ),
+            SubTest(
+                name="Test 2",
+                description="Exception undefined value",
+                args={'channel_id': 'Y'},
+                object=DBSqlLiteCache(path=self.db_path+'2', hard=True),
+                middlewares_before=[
+                    lambda: self.set_rows_channels(self.db_path + '2', ['X', 'P'], 'channels', valid=True),
+                ],
+                exception=utils.CacheError,
+                middlewares_after=[lambda: self.remove_filename(self.db_path+'2')],
+            ),
+        ]
+
+    def test(self):
+        for test in self.tests:
+            self.apply_test(test, lambda obj, kwargs: obj.set_channel_downloaded(**kwargs))
+
+
 class TestDBSqlLiteCacheGetBestChannelId(TestDBSqlLiteCache):
 
     def setUp(self):
@@ -599,18 +636,6 @@ class TestDBSqlLiteCacheGetBestChannelId(TestDBSqlLiteCache):
                     lambda: self.remove_filename(self.db_path+'10')
                 ],
             ),
-            # SubTest(
-            #     name="Test 3",
-            #     description="Empty cache",
-            #     object=DBSqlLiteCache(path=self.db_path+'3', hard=True),
-            #     middlewares_before=[
-            #         lambda: self.set_rows_channels(self.db_path + '3', ['X'], 'channels'),
-            #     ],
-            #     want='X',
-            #     middlewares_after=[
-            #         lambda: self.remove_filename(self.db_path+'3')
-            #     ],
-            # ),
         ]
 
     def test(self):
