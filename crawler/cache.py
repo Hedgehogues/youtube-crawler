@@ -8,7 +8,6 @@ from crawler.simple_logger import SimpleLogger
 def create_args_set_base_channels(channel_id):
     return [
         channel_id,
-        True,
         True
     ]
 
@@ -93,10 +92,9 @@ class DBSqlLiteCache:
     __sql_insert_set_base_channel = '''
     insert into channels(
       channel_id,
-      valid, 
       base_channel
     ) 
-    values(?, ?, ?)
+    values(?, ?)
     '''
 
     __sql_update_failed_channel = '''
@@ -112,6 +110,12 @@ class DBSqlLiteCache:
 
     __sql_select_exist_video = '''
     select video_id from videos where video_id=? 
+    '''
+
+    __sql_get_best_channel = '''
+    select channel_id from channels
+    where channels.valid = TRUE and channels.downloaded = FALSE 
+    order by NOT channels.scrapped, NOT channels.base_channel, -channels.priority 
     '''
 
     def __create_db(self, conn):
@@ -253,10 +257,20 @@ class DBSqlLiteCache:
 
     def get_best_channel_id(self):
         """
-        This method return best channel_id. This method select all channels except downloaded==True
-        or valid==False. If method was scrapped, but not downloaded, then this channel will be scrapped
-        again and some videos which not downloaded will be download
+        This method returns best channel_id. This method selects all channels except downloaded==True
+        or valid==False. All channels ranges by priority. But there are two flags, which ones set additional ranges.
+        (see sql-query)
+
         :return:
-            channel_id (str): the best channel_id by priority
+            channel_id (str): the best channel_id by priority or '' if there are not any actual channels
+        :exception
+
         """
-        raise Exception("Not implemented")
+        conn = sqlite3.connect(self.db_path)
+
+        res = conn.execute(self.__sql_get_best_channel).fetchone()
+        # TODO: заменить в запросе на TOP 1
+        conn.close()
+        if res is None or len(res) == 0:
+            raise utils.CacheError(msg="There are not any channels")
+        return res[0]

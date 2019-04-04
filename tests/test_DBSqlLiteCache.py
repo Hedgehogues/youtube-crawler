@@ -10,11 +10,14 @@ class TestDBSqlLiteCache(BaseTestClass):
     db_path = 'data/test.sqlite'
 
     @staticmethod
-    def set_rows_channels(db_path, channel_ids, table_name, base_channel=False, valid=True):
+    def set_rows_channels(db_path, channel_ids, table_name,
+                          base_channel=False, valid=True, downloaded=False, scrapped=False, priority=0.):
         conn = sqlite3.connect(db_path)
-        query = 'insert into %s(channel_id, base_channel, valid) values(?, ?, ?)' % table_name
+        query = 'insert into %s' \
+                '(channel_id, base_channel, valid, downloaded, scrapped, priority) ' \
+                'values(?, ?, ?, ?, ?, ?)' % table_name
         for channel_id in channel_ids:
-            conn.execute(query, (channel_id, base_channel, valid))
+            conn.execute(query, (channel_id, base_channel, valid, downloaded, scrapped, priority))
         conn.commit()
         conn.close()
 
@@ -444,3 +447,172 @@ class TestDBSqlLiteCacheSetFailedChannel(TestDBSqlLiteCache):
     def test(self):
         for test in self.tests:
             self.apply_test(test, lambda obj, kwargs: obj.set_failed_channel(**kwargs))
+
+
+class TestDBSqlLiteCacheGetBestChannelId(TestDBSqlLiteCache):
+
+    def setUp(self):
+        self.tests = [
+            SubTest(
+                name="Test 1",
+                description="Empty cache",
+                object=DBSqlLiteCache(path=self.db_path+'1', hard=True),
+                middlewares_before=[
+                    lambda: self.set_rows_channels(self.db_path+'1', [], 'channels'),
+                ],
+                exception=utils.CacheError,
+                middlewares_after=[
+                    lambda: self.remove_filename(self.db_path+'1')
+                ],
+            ),
+            SubTest(
+                name="Test 2",
+                description="There are not valid channels",
+                object=DBSqlLiteCache(path=self.db_path+'2', hard=True),
+                middlewares_before=[
+                    lambda: self.set_rows_channels(self.db_path+'2', ['X'], 'channels', valid=False),
+                ],
+                exception=utils.CacheError,
+                middlewares_after=[
+                    lambda: self.remove_filename(self.db_path+'2')
+                ],
+            ),
+            SubTest(
+                name="Test 3",
+                description="There are valid channel the only",
+                object=DBSqlLiteCache(path=self.db_path+'3', hard=True),
+                middlewares_before=[
+                    lambda: self.set_rows_channels(self.db_path+'3', ['X'], 'channels', base_channel=False, valid=True,
+                                                   downloaded=False, scrapped=False, priority=0),
+                ],
+                want='X',
+                middlewares_after=[
+                    lambda: self.remove_filename(self.db_path+'3')
+                ],
+            ),
+            SubTest(
+                name="Test 4",
+                description="There are base channel",
+                object=DBSqlLiteCache(path=self.db_path+'4', hard=True),
+                middlewares_before=[
+                    lambda: self.set_rows_channels(self.db_path+'4', ['X'], 'channels', base_channel=False, valid=True,
+                                                   downloaded=False, scrapped=False, priority=0),
+                    lambda: self.set_rows_channels(self.db_path+'4', ['Y'], 'channels', base_channel=True, valid=True,
+                                                   downloaded=False, scrapped=False, priority=0),
+                ],
+                want='Y',
+                middlewares_after=[
+                    lambda: self.remove_filename(self.db_path+'4')
+                ],
+            ),
+            SubTest(
+                name="Test 5",
+                description="There are base channel and downloaded",
+                object=DBSqlLiteCache(path=self.db_path+'5', hard=True),
+                middlewares_before=[
+                    lambda: self.set_rows_channels(self.db_path+'5', ['X'], 'channels', base_channel=False, valid=True,
+                                                   downloaded=False, scrapped=False, priority=0),
+                    lambda: self.set_rows_channels(self.db_path+'5', ['Y'], 'channels', base_channel=True, valid=True,
+                                                   downloaded=False, scrapped=False, priority=0),
+                    lambda: self.set_rows_channels(self.db_path+'5', ['Z'], 'channels', base_channel=False, valid=True,
+                                                   downloaded=True, scrapped=False, priority=0),
+                ],
+                want='Y',
+                middlewares_after=[
+                    lambda: self.remove_filename(self.db_path+'5')
+                ],
+            ),
+            SubTest(
+                name="Test 6",
+                description="There are base channel priority",
+                object=DBSqlLiteCache(path=self.db_path+'6', hard=True),
+                middlewares_before=[
+                    lambda: self.set_rows_channels(self.db_path+'6', ['X'], 'channels', base_channel=False, valid=True,
+                                                   downloaded=False, scrapped=False, priority=0),
+                    lambda: self.set_rows_channels(self.db_path+'6', ['Y'], 'channels', base_channel=True, valid=True,
+                                                   downloaded=False, scrapped=False, priority=0),
+                    lambda: self.set_rows_channels(self.db_path+'6', ['Z'], 'channels', base_channel=True, valid=True,
+                                                   downloaded=False, scrapped=False, priority=1),
+                ],
+                want='Z',
+                middlewares_after=[
+                    lambda: self.remove_filename(self.db_path+'6')
+                ],
+            ),
+            SubTest(
+                name="Test 7",
+                description="There are the only downloaded channel",
+                object=DBSqlLiteCache(path=self.db_path+'7', hard=True),
+                middlewares_before=[
+                    lambda: self.set_rows_channels(self.db_path+'7', ['X'], 'channels', base_channel=False, valid=True,
+                                                   downloaded=True, scrapped=False, priority=0),
+                    lambda: self.set_rows_channels(self.db_path+'7', ['Y'], 'channels', base_channel=True, valid=True,
+                                                   downloaded=True, scrapped=False, priority=1),
+                ],
+                exception=utils.CacheError,
+                middlewares_after=[
+                    lambda: self.remove_filename(self.db_path+'7')
+                ],
+            ),
+            SubTest(
+                name="Test 8",
+                description="Scrapped and base channel",
+                object=DBSqlLiteCache(path=self.db_path+'8', hard=True),
+                middlewares_before=[
+                    lambda: self.set_rows_channels(self.db_path+'8', ['X'], 'channels', base_channel=False, valid=True,
+                                                   downloaded=False, scrapped=True, priority=0),
+                    lambda: self.set_rows_channels(self.db_path+'8', ['Y'], 'channels', base_channel=True, valid=True,
+                                                   downloaded=False, scrapped=False, priority=0),
+                ],
+                want='X',
+                middlewares_after=[
+                    lambda: self.remove_filename(self.db_path+'8')
+                ],
+            ),
+            SubTest(
+                name="Test 9",
+                description="Scrapped, base channel, priority",
+                object=DBSqlLiteCache(path=self.db_path+'9', hard=True),
+                middlewares_before=[
+                    lambda: self.set_rows_channels(self.db_path+'9', ['X'], 'channels', base_channel=False, valid=True,
+                                                   downloaded=False, scrapped=True, priority=0),
+                    lambda: self.set_rows_channels(self.db_path+'9', ['Y'], 'channels', base_channel=True, valid=True,
+                                                   downloaded=False, scrapped=False, priority=1),
+                ],
+                want='X',
+                middlewares_after=[
+                    lambda: self.remove_filename(self.db_path+'9')
+                ],
+            ),
+            SubTest(
+                name="Test 10",
+                description="Scrapped, base channel, priority",
+                object=DBSqlLiteCache(path=self.db_path+'10', hard=True),
+                middlewares_before=[
+                    lambda: self.set_rows_channels(self.db_path+'10', ['X'], 'channels', base_channel=True, valid=True,
+                                                   downloaded=False, scrapped=False, priority=0),
+                    lambda: self.set_rows_channels(self.db_path+'10', ['Y'], 'channels', base_channel=False, valid=True,
+                                                   downloaded=False, scrapped=False, priority=1.1),
+                ],
+                want='X',
+                middlewares_after=[
+                    lambda: self.remove_filename(self.db_path+'10')
+                ],
+            ),
+            # SubTest(
+            #     name="Test 3",
+            #     description="Empty cache",
+            #     object=DBSqlLiteCache(path=self.db_path+'3', hard=True),
+            #     middlewares_before=[
+            #         lambda: self.set_rows_channels(self.db_path + '3', ['X'], 'channels'),
+            #     ],
+            #     want='X',
+            #     middlewares_after=[
+            #         lambda: self.remove_filename(self.db_path+'3')
+            #     ],
+            # ),
+        ]
+
+    def test(self):
+        for test in self.tests:
+            self.apply_test(test, lambda obj, kwargs: obj.get_best_channel_id(**kwargs))
