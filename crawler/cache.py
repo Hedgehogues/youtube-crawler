@@ -175,10 +175,9 @@ class DBSqlLiteCache:
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
         c.execute(self.__sql_select_exist_video, video_id)
-        is_exist = c.fetchone()
+        res = c.fetchone()
         c.close()
-        conn.close()
-        return is_exist
+        return res is not None and len(res) != 0
 
     def __check_exist_channel_id(self, conn, channel_id):
         c = conn.cursor()
