@@ -5,7 +5,15 @@ from crawler import utils
 from crawler.simple_logger import SimpleLogger
 
 
-def create_args_set_base_channels(channel_id):
+def create_args_set_update_base_channels(channel_id):
+    return [
+        channel_id,
+        True,
+        channel_id
+    ]
+
+
+def create_args_set_insert_base_channels(channel_id):
     return [
         channel_id,
         True
@@ -89,12 +97,20 @@ class DBSqlLiteCache:
     values(?, ?, ?, ?, ?, ?, ?)
     '''
 
-    __sql_insert_set_base_channel = '''
+    __sql_insert_base_channel = '''
     insert into channels(
       channel_id,
       base_channel
     ) 
     values(?, ?)
+    '''
+
+    __sql_update_base_channel = '''
+    update channels
+    set
+      channel_id=?,
+      base_channel=?
+    where channel_id=?;
     '''
 
     __sql_update_failed_channel = '''
@@ -106,6 +122,13 @@ class DBSqlLiteCache:
 
     __sql_update_downloaded_channel = '''
     update channels
+    set
+      downloaded=?
+    where channel_id=?;
+    '''
+
+    __sql_update_video = '''
+    update videos
     set
       downloaded=?
     where channel_id=?;
@@ -158,11 +181,14 @@ class DBSqlLiteCache:
             self.logger.warn(warn)
         return output_channels
 
-    def set_failed_video(self, video):
+    def insert_failed_video(self, video):
         raise Exception("Not implemented")
 
-    def set_video_descr(self, video):
-        raise Exception("Not implemented")
+    def insert_video_descr(self, video):
+        conn = sqlite3.connect(self.db_path)
+        conn.execute(self.__sql_update_failed_channel, video)
+        conn.commit()
+        conn.close()
 
     def check_exist_video(self, video_id):
         """
@@ -190,12 +216,15 @@ class DBSqlLiteCache:
         warn = utils.CacheError(channel_id=channel_id, msg="This channel already exists")
         self.logger.warn(warn)
 
-    def set_base_channels(self, channels_id):
+    def set_base_channels(self, channels_id, replace=False):
         """
         This method sets id of channels, which user sat.
 
         :param channels_id: list of channel ids for insert
+        :param replace: field is True, then duplicate channel is replace else is not replace. Base_channel was updated.
+            Another fields don't update
         """
+
         channels = []
         for channel_id in channels_id:
             channels.append({'channel_id': channel_id})
@@ -203,11 +232,15 @@ class DBSqlLiteCache:
         conn = sqlite3.connect(self.db_path)
         for channel in channels:
             channel_id = channel['channel_id']
-            if self.__check_exist_channel_id(conn, channel_id):
-                self.__log_exist_channel(channel_id)
+            query = self.__sql_insert_base_channel
+            args = create_args_set_insert_base_channels(channel_id)
+            is_exist_channel_id = self.__check_exist_channel_id(conn, channel_id)
+            if is_exist_channel_id and not replace:
                 continue
-            args = create_args_set_base_channels(channel_id)
-            conn.execute(self.__sql_insert_set_base_channel, args)
+            if is_exist_channel_id and replace:
+                query = self.__sql_update_base_channel
+                args = create_args_set_update_base_channels(channel_id)
+            conn.execute(query, args)
         conn.commit()
         conn.close()
 
@@ -232,19 +265,19 @@ class DBSqlLiteCache:
             query = self.__sql_insert_channel
             args = create_args_update_channels(channel, scrapped, valid)
             if self.__check_exist_channel_id(conn, channel_id):
-                self.__log_exist_channel(channel_id)
                 query = self.__sql_update_channel
                 args.append(channel_id)
             conn.execute(query, args)
         conn.commit()
         conn.close()
 
-    def set_failed_channel(self, channel_id):
+    def update_failed_channel(self, channel_id):
         """
         This method set field valid as False. If there is not channel_id, then exceptions will be generated
 
         :param channel_id: failed channel id (str)
-        :return:
+        :exception utils.CacheError: not found channel id
+
         """
         conn = sqlite3.connect(self.db_path)
         if not self.__check_exist_channel_id(conn, channel_id):
@@ -253,17 +286,18 @@ class DBSqlLiteCache:
         conn.commit()
         conn.close()
 
-    def set_channel_downloaded(self, channel_id):
+    def update_channel_downloaded(self, channel_id):
         """
         This function process next cases:
             * valid==False, scrapped==False, downloaded==True
         If you want got more information, see c  lass description
+
+        :param channel_id: field downloaded sets as True
+        :exception utils.CacheError: not found channel id
         """
         conn = sqlite3.connect(self.db_path)
-
         if not self.__check_exist_channel_id(conn, channel_id):
             raise utils.CacheError(channel_id=channel_id, msg="Not found channel in DB")
-
         conn.execute(self.__sql_update_downloaded_channel, (True, channel_id))
         conn.commit()
         conn.close()
@@ -274,10 +308,8 @@ class DBSqlLiteCache:
         or valid==False. All channels ranges by priority. But there are two flags, which ones set additional ranges.
         (see sql-query)
 
-        :return:
-            channel_id (str): the best channel_id by priority or '' if there are not any actual channels
-        :exception
-
+        :return the best channel_id (str) by priority or '' if there are not any actual channels
+        :exception utils.CacheError: not found any channel id
         """
         conn = sqlite3.connect(self.db_path)
 

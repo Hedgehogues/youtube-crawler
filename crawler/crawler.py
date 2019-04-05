@@ -95,7 +95,7 @@ class YoutubeCrawler:
 
     def __set_failed_channel(self, channel_id):
         try:
-            self.__cache.set_failed_channel(channel_id)
+            self.__cache.update_failed_channel(channel_id)
         except Exception as e:
             self.logger.alert(e)
 
@@ -113,12 +113,12 @@ class YoutubeCrawler:
             try:
                 full_video_descr = self.scrappy_decorator(self.__video_downloader.load, short_video_descr)
             except Exception as e:
-                self.__cache.set_failed_video(video_id)
+                self.__cache.insert_failed_video(video_id)
                 self.logger.warn(e)
                 continue
 
             data = self.__create_video(video_id, channel_id, full_video_descr, short_video_descr)
-            err = self.__cache.set_video_descr(data)
+            err = self.__cache.insert_video_descr(data)
             self.logger.alert(err)
 
     def process(self, channel_ids=None):
@@ -165,7 +165,7 @@ class YoutubeCrawler:
             self.__download_videos(full_descr)
 
             # Channel was downloaded
-            channel_id, err = self.__cache.set_channel_downloaded(channel_id)
+            channel_id, err = self.__cache.update_channel_downloaded(channel_id)
             self.logger.error(err + self.__crash_msg % ("ChannelId", channel_id))
 
             # Getting next channel from Cache

@@ -32,16 +32,32 @@ class TestDBSqlLiteCache(BaseTestClass):
         conn.commit()
         conn.close()
 
-    def check_field(self, db_path, value, table_name, channel_id, field):
+    def check_field_channels(self, db_path, value, channel_id, field):
         fields_indexes = {
             'channel_id': 0,
             'base_channel': 1,
             'valid': 2,
             'downloaded': 4,
+            'priority': 5,
         }
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
-        query = 'select * from %s where channel_id=?' % table_name
+        query = 'select * from channels where channel_id=?'
+        c.execute(query, (channel_id,))
+        res = c.fetchone()
+        self.assertIsNotNone(res)
+        field_index = fields_indexes[field]
+        self.assertEqual(value, res[field_index])
+        c.close()
+        conn.close()
+
+    def check_field_videos(self, db_path, value, channel_id, field):
+        fields_indexes = {
+            'priority': 4,
+        }
+        conn = sqlite3.connect(db_path)
+        c = conn.cursor()
+        query = 'select * from videos where video_id=?'
         c.execute(query, (channel_id,))
         res = c.fetchone()
         self.assertIsNotNone(res)
@@ -268,9 +284,9 @@ class TestDBSqlLiteCacheSetChannels(TestDBSqlLiteCache):
                     lambda: self.set_rows_channels(self.db_path + '9', ['X', 'P'], True)
                 ],
                 middlewares_after=[
-                    lambda: self.check_field(self.db_path + '9', 1, 'channels', 'X', field='base_channel'),
-                    lambda: self.check_field(self.db_path + '9', 1, 'channels', 'P', field='base_channel'),
-                    lambda: self.check_field(self.db_path + '9', 0, 'channels', 'Y', field='base_channel'),
+                    lambda: self.check_field_channels(self.db_path + '9', 1, 'X', field='base_channel'),
+                    lambda: self.check_field_channels(self.db_path + '9', 1, 'P', field='base_channel'),
+                    lambda: self.check_field_channels(self.db_path + '9', 0, 'Y', field='base_channel'),
                     lambda: self.check_db_count_rows(self.db_path + '9', 3, 'channels'),
                     lambda: self.remove_filename(self.db_path + '9')
                 ],
@@ -370,10 +386,25 @@ class TestDBSqlLiteCacheSetBaseChannels(TestDBSqlLiteCache):
                     lambda: self.set_rows_channels(self.db_path + '8', ['X', 'P'])
                 ],
                 middlewares_after=[
-                    lambda: self.check_field(self.db_path + '8', 0, 'channels', 'X', field='base_channel'),
-                    lambda: self.check_field(self.db_path + '8', 1, 'channels', 'Y', field='base_channel'),
+                    lambda: self.check_field_channels(self.db_path + '8', 0, 'X', field='base_channel'),
+                    lambda: self.check_field_channels(self.db_path + '8', 1, 'Y', field='base_channel'),
                     lambda: self.check_db_count_rows(self.db_path + '8', 3, 'channels'),
                     lambda: self.remove_filename(self.db_path + '8')
+                ],
+            ),
+            SubTest(
+                name="Test 9",
+                description="Replace channel_id",
+                args={'channels_id': ['X'], "replace": True},
+                object=DBSqlLiteCache(path=self.db_path + '9', hard=True, logger=MockLogger()),
+                middlewares_before=[
+                    lambda: self.set_rows_channels(self.db_path + '9', ['X', 'Y'], base_channel=True)
+                ],
+                middlewares_after=[
+                    lambda: self.check_field_channels(self.db_path + '9', 1, 'X', field='base_channel'),
+                    lambda: self.check_field_channels(self.db_path + '9', 1, 'Y', field='base_channel'),
+                    lambda: self.check_db_count_rows(self.db_path + '9', 2, 'channels'),
+                    lambda: self.remove_filename(self.db_path + '9')
                 ],
             ),
         ]
@@ -439,8 +470,8 @@ class TestDBSqlLiteCacheSetFailedChannel(TestDBSqlLiteCache):
                     lambda: self.set_rows_channels(self.db_path + '1', ['X', 'P'], valid=True),
                 ],
                 middlewares_after=[
-                    lambda: self.check_field(self.db_path + '1', 0, 'channels', 'X', field='valid'),
-                    lambda: self.check_field(self.db_path + '1', 1, 'channels', 'P', field='valid'),
+                    lambda: self.check_field_channels(self.db_path + '1', 0, 'X', field='valid'),
+                    lambda: self.check_field_channels(self.db_path + '1', 1, 'P', field='valid'),
                     lambda: self.remove_filename(self.db_path+'1')
                 ],
             ),
@@ -459,7 +490,7 @@ class TestDBSqlLiteCacheSetFailedChannel(TestDBSqlLiteCache):
 
     def test(self):
         for test in self.tests:
-            self.apply_test(test, lambda obj, kwargs: obj.set_failed_channel(**kwargs))
+            self.apply_test(test, lambda obj, kwargs: obj.update_failed_channel(**kwargs))
 
 
 class TestDBSqlLiteCacheSetDownloadedChannel(TestDBSqlLiteCache):
@@ -475,8 +506,8 @@ class TestDBSqlLiteCacheSetDownloadedChannel(TestDBSqlLiteCache):
                     lambda: self.set_rows_channels(self.db_path + '1', ['X', 'P'], valid=True, downloaded=False),
                 ],
                 middlewares_after=[
-                    lambda: self.check_field(self.db_path + '1', 1, 'channels', 'X', field='downloaded'),
-                    lambda: self.check_field(self.db_path + '1', 0, 'channels', 'P', field='downloaded'),
+                    lambda: self.check_field_channels(self.db_path + '1', 1, 'X', field='downloaded'),
+                    lambda: self.check_field_channels(self.db_path + '1', 0, 'P', field='downloaded'),
                     lambda: self.remove_filename(self.db_path+'1')
                 ],
             ),
@@ -495,7 +526,7 @@ class TestDBSqlLiteCacheSetDownloadedChannel(TestDBSqlLiteCache):
 
     def test(self):
         for test in self.tests:
-            self.apply_test(test, lambda obj, kwargs: obj.set_channel_downloaded(**kwargs))
+            self.apply_test(test, lambda obj, kwargs: obj.update_channel_downloaded(**kwargs))
 
 
 class TestDBSqlLiteCacheGetBestChannelId(TestDBSqlLiteCache):
