@@ -185,6 +185,21 @@ class DBSqlLiteCache:
         raise Exception("Not implemented")
 
     def insert_video_descr(self, video):
+        """
+        This method inserts video description into data base
+
+        :param video: description of video: (
+            {
+                'video_id': video_id,
+                'channel_id': channel_id,
+                'full_description': full_descr,
+                'short_description': short_descr,
+                'subtitles': subtitles,
+                'valid': valid,
+                'priority': priority,
+            }
+        )
+        """
         conn = sqlite3.connect(self.db_path)
         conn.execute(self.__sql_update_failed_channel, video)
         conn.commit()
@@ -192,8 +207,7 @@ class DBSqlLiteCache:
 
     def check_exist_video(self, video_id):
         """
-        This method check exist video and returns True
-        if there is one or else another
+        This method check exist video and returns True if there is one or else another
 
         :param video_id: video id
         :return exist video (bool)
@@ -211,10 +225,6 @@ class DBSqlLiteCache:
         res = c.fetchone()
         c.close()
         return res is not None and len(res) != 0
-
-    def __log_exist_channel(self, channel_id):
-        warn = utils.CacheError(channel_id=channel_id, msg="This channel already exists")
-        self.logger.warn(warn)
 
     def set_base_channels(self, channels_id, replace=False):
         """
@@ -254,7 +264,14 @@ class DBSqlLiteCache:
 
         This function insert new channel and update old channels fully (without field base_channel)
 
-        :param channels: describe of channel (dict)
+        :param channels: describe of channel: (
+            [{
+                    'channel_id': channel_id,
+                    'priority': priority,
+                    'full_description': full_descr,
+                    'short_description': short_descr,
+            }]
+        )
         :param scrapped: scrapped or not channel (bool)
         :param valid: valid or invalid channel (bool)
         """
@@ -276,8 +293,7 @@ class DBSqlLiteCache:
         This method set field valid as False. If there is not channel_id, then exceptions will be generated
 
         :param channel_id: failed channel id (str)
-        :exception utils.CacheError: not found channel id
-
+        :exception utils.CacheError: it is not found channel id
         """
         conn = sqlite3.connect(self.db_path)
         if not self.__check_exist_channel_id(conn, channel_id):
@@ -293,7 +309,7 @@ class DBSqlLiteCache:
         If you want got more information, see c  lass description
 
         :param channel_id: field downloaded sets as True
-        :exception utils.CacheError: not found channel id
+        :exception utils.CacheError: it is not found channel id
         """
         conn = sqlite3.connect(self.db_path)
         if not self.__check_exist_channel_id(conn, channel_id):
@@ -304,17 +320,17 @@ class DBSqlLiteCache:
 
     def get_best_channel_id(self):
         """
-        This method returns best channel_id. This method selects all channels except downloaded==True
+        This method returns the best channel_id. This method selects all channels except downloaded==True
         or valid==False. All channels ranges by priority. But there are two flags, which ones set additional ranges.
         (see sql-query)
 
         :return the best channel_id (str) by priority or '' if there are not any actual channels
-        :exception utils.CacheError: not found any channel id
+        :exception utils.CacheError: it is not found any channel id for return
         """
         conn = sqlite3.connect(self.db_path)
 
+        # It uses fetch one instead of top 1 as not all data bases have top directive
         res = conn.execute(self.__sql_get_best_channel).fetchone()
-        # TODO: заменить в запросе на TOP 1
         conn.close()
         if res is None or len(res) == 0:
             raise utils.CacheError(msg="There are not any channels")
