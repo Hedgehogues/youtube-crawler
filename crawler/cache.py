@@ -74,14 +74,13 @@ class DBSqlLiteCache:
     __sql_update_channel = '''
     update channels
     set
-      channel_id=?,
-      valid=?,
-      scrapped=?,
-      downloaded=?,
-      priority=?,
-      full_description=?,
-      short_description=?
-    where channel_id=?;
+      channel_id text,
+      video_id text PRIMARY KEY,
+      valid boolean,
+      downloaded boolean,
+      priority float,
+      description text
+    where video_id=?;
     '''
 
     __sql_insert_channel = '''
@@ -93,6 +92,18 @@ class DBSqlLiteCache:
       priority, 
       full_description, 
       short_description
+    ) 
+    values(?, ?, ?, ?, ?, ?, ?)
+    '''
+
+    __sql_insert_video = '''
+    insert into videos(
+      channel_id,
+      video_id,
+      valid,
+      downloaded,
+      priority,
+      description
     ) 
     values(?, ?, ?, ?, ?, ?, ?)
     '''
@@ -118,6 +129,13 @@ class DBSqlLiteCache:
     set
       valid=?
     where channel_id=?;
+    '''
+
+    __sql_update_failed_video = '''
+    update videos
+    set
+      valid=?
+    where video_id=?;
     '''
 
     __sql_update_downloaded_channel = '''
@@ -181,8 +199,19 @@ class DBSqlLiteCache:
             self.logger.warn(warn)
         return output_channels
 
-    def insert_failed_video(self, video):
-        raise Exception("Not implemented")
+    def update_failed_video(self, video_id):
+        """
+        This method set field valid as False. If there is not video_id, then exceptions will be generated
+
+        :param video_id: failed video id (str)
+        :exception utils.CacheError: it is not found video id
+        """
+        conn = sqlite3.connect(self.db_path)
+        if not self.__check_exist_video_id(conn, video_id):
+            raise utils.CacheError(channel_id=video_id, msg="Not found video in DB")
+        conn.execute(self.__sql_update_failed_video, (False, video_id))
+        conn.commit()
+        conn.close()
 
     def insert_video_descr(self, video):
         """
@@ -194,14 +223,14 @@ class DBSqlLiteCache:
                 'channel_id': channel_id,
                 'full_description': full_descr,
                 'short_description': short_descr,
-                'subtitles': subtitles,
                 'valid': valid,
                 'priority': priority,
             }
         )
         """
+        # TODO: this method not tested
         conn = sqlite3.connect(self.db_path)
-        conn.execute(self.__sql_update_failed_channel, video)
+        conn.execute(self.__sql_insert_video, video)
         conn.commit()
         conn.close()
 
@@ -213,6 +242,13 @@ class DBSqlLiteCache:
         :return exist video (bool)
         """
         conn = sqlite3.connect(self.db_path)
+        c = conn.cursor()
+        c.execute(self.__sql_select_exist_video, video_id)
+        res = c.fetchone()
+        c.close()
+        return res is not None and len(res) != 0
+
+    def __check_exist_video_id(self, conn, video_id):
         c = conn.cursor()
         c.execute(self.__sql_select_exist_video, video_id)
         res = c.fetchone()

@@ -113,7 +113,7 @@ class YoutubeCrawler:
             try:
                 full_video_descr = self.scrappy_decorator(self.__video_downloader.load, short_video_descr)
             except Exception as e:
-                self.__cache.insert_failed_video(video_id)
+                self.__cache.update_failed_video(video_id)
                 self.logger.warn(e)
                 continue
 

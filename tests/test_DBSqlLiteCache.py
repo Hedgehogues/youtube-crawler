@@ -51,14 +51,16 @@ class TestDBSqlLiteCache(BaseTestClass):
         c.close()
         conn.close()
 
-    def check_field_videos(self, db_path, value, channel_id, field):
+    def check_field_videos(self, db_path, value, video_id, field):
         fields_indexes = {
+            'valid': 2,
             'priority': 4,
+            'full_description': 6,
         }
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
         query = 'select * from videos where video_id=?'
-        c.execute(query, (channel_id,))
+        c.execute(query, (video_id,))
         res = c.fetchone()
         self.assertIsNotNone(res)
         field_index = fields_indexes[field]
@@ -729,4 +731,39 @@ class TestDBSqlLiteCacheCheckExistVideo(TestDBSqlLiteCache):
         for test in self.tests:
             self.apply_test(test, lambda obj, kwargs: obj.check_exist_video(**kwargs))
 
+
+class TestDBSqlLiteCacheSetFailedVideo(TestDBSqlLiteCache):
+
+    def setUp(self):
+        self.tests = [
+            SubTest(
+                name="Test 1",
+                description="Modify old value",
+                args={'video_id': 'X'},
+                object=DBSqlLiteCache(path=self.db_path+'1', hard=True),
+                middlewares_before=[
+                    lambda: self.set_rows_videos(self.db_path + '1', ['X', 'P'], valid=True),
+                ],
+                middlewares_after=[
+                    lambda: self.check_field_videos(self.db_path + '1', 0, 'X', field='valid'),
+                    lambda: self.check_field_videos(self.db_path + '1', 1, 'P', field='valid'),
+                    lambda: self.remove_filename(self.db_path+'1')
+                ],
+            ),
+            SubTest(
+                name="Test 2",
+                description="Exception undefined value",
+                args={'video_id': 'Y'},
+                object=DBSqlLiteCache(path=self.db_path+'2', hard=True),
+                middlewares_before=[
+                    lambda: self.set_rows_channels(self.db_path + '2', ['X', 'P'], valid=True),
+                ],
+                exception=utils.CacheError,
+                middlewares_after=[lambda: self.remove_filename(self.db_path+'2')],
+            ),
+        ]
+
+    def test(self):
+        for test in self.tests:
+            self.apply_test(test, lambda obj, kwargs: obj.update_failed_video(**kwargs))
 
