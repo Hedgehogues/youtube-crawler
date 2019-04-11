@@ -33,6 +33,7 @@ def create_args_update_channels(channel, scrapped, valid):
 
 
 class DBSqlLiteCache:
+    # TODO: change integration test to unit tests and make integration tests
     """
     Rows in tables with channels can be:
         * valid==True, scrapped==True, downloaded==False. It means, that channel was scrapped and some videos were not
@@ -228,7 +229,7 @@ class DBSqlLiteCache:
             }
         )
         """
-        # TODO: this method not tested
+        # TODO: this method doesn't tested
         conn = sqlite3.connect(self.db_path)
         conn.execute(self.__sql_insert_video, video)
         conn.commit()
