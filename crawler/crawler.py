@@ -52,7 +52,8 @@ class YoutubeCrawler:
         while count < self.__max_attempts:
             try:
                 return fn(*args, **kwargs)
-            except e:
+            except Exception as e:
+                self.logger.warn(utils.CrawlerError(e=e, msg="problem into scrapper. retry: %d" % count))
                 count += 1
         raise e
 
