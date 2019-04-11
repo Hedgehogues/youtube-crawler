@@ -1,7 +1,7 @@
 class SimpleLogger:
 
     def info(self, msg):
-        print("[INFO]: %s", msg)
+        print("[INFO]: %s" % msg)
 
     def warn(self, err):
         print("[WARN]: %s. StackError: %s" % (err.msg, err.get_stack_errors()))

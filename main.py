@@ -5,10 +5,10 @@ from crawler.scrapper import Scrapper
 from crawler import parsers
 
 
-channel_id = ['UCzAzPC4VWIMHqrnIM1iBPsQ']
+channel_ids = ['UCzAzPC4VWIMHqrnIM1iBPsQ']
 
 x = YoutubeCrawler(cache=DBSqlLiteCache(hard=True))
-x.process(channel_id)
+x.process(channel_ids)
 
 
 loader = Loader()
@@ -23,7 +23,7 @@ scrapper = Scrapper(
         parsers.AboutParser(),
     ]
 )
-descr = scrapper.parse(channel_id)
+descr = scrapper.parse(channel_ids)
 # scrapper.download(descr[Tab.Videos][1]['video_id'])
 print(descr)
 

@@ -75,13 +75,14 @@ class DBSqlLiteCache:
     __sql_update_channel = '''
     update channels
     set
-      channel_id text,
-      video_id text PRIMARY KEY,
-      valid boolean,
-      downloaded boolean,
-      priority float,
-      description text
-    where video_id=?;
+      channel_id=?,
+      valid=?,
+      scrapped=?,
+      downloaded=?,
+      priority=?,
+      full_description=?,
+      short_description=?
+    where channel_id=?;
     '''
 
     __sql_insert_channel = '''
@@ -244,21 +245,21 @@ class DBSqlLiteCache:
         """
         conn = sqlite3.connect(self.db_path)
         c = conn.cursor()
-        c.execute(self.__sql_select_exist_video, video_id)
+        c.execute(self.__sql_select_exist_video, (video_id,))
         res = c.fetchone()
         c.close()
         return res is not None and len(res) != 0
 
     def __check_exist_video_id(self, conn, video_id):
         c = conn.cursor()
-        c.execute(self.__sql_select_exist_video, video_id)
+        c.execute(self.__sql_select_exist_video, (video_id,))
         res = c.fetchone()
         c.close()
         return res is not None and len(res) != 0
 
     def __check_exist_channel_id(self, conn, channel_id):
         c = conn.cursor()
-        c.execute(self.__sql_select_exist_channel, channel_id)
+        c.execute(self.__sql_select_exist_channel, (channel_id,))
         res = c.fetchone()
         c.close()
         return res is not None and len(res) != 0

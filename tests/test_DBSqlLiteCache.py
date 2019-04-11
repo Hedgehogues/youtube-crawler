@@ -83,6 +83,37 @@ class TestDBSqlLiteCacheSetChannels(TestDBSqlLiteCache):
 
     def setUp(self):
         self.tests = [
+
+            SubTest(
+                name="Test 5",
+                description="Two channel per transaction",
+                args={
+                    'channels': [
+                        {
+                            'channel_id': 'XXXX',
+                            'priority': 0,
+                            'full_description': None,
+                            'short_description': None,
+                        },
+                        {
+                            'channel_id': 'Y',
+                            'priority': 0,
+                            'full_description': None,
+                            'short_description': None,
+                        }
+                    ],
+                    'scrapped': False,
+                    'valid': False
+                },
+                object=DBSqlLiteCache(path=self.db_path + '5', hard=True, logger=MockLogger()),
+                middlewares_before=[
+                    lambda: self.set_rows_channels(self.db_path + '5', ['XXXX', 'P'])
+                ],
+                middlewares_after=[
+                    lambda: self.check_db_count_rows(self.db_path + '5', 3, 'channels'),
+                    lambda: self.remove_filename(self.db_path + '5')
+                ],
+            ),
             SubTest(
                 name="Test 1",
                 description="All fields are not None",
@@ -184,40 +215,10 @@ class TestDBSqlLiteCacheSetChannels(TestDBSqlLiteCache):
                 ],
             ),
             SubTest(
-                name="Test 5",
-                description="Two channel per transaction",
-                args={
-                    'channels': [
-                        {
-                            'channel_id': 'X',
-                            'priority': 0,
-                            'full_description': None,
-                            'short_description': None,
-                        },
-                        {
-                            'channel_id': 'Y',
-                            'priority': 0,
-                            'full_description': None,
-                            'short_description': None,
-                        }
-                    ],
-                    'scrapped': False,
-                    'valid': False
-                },
-                object=DBSqlLiteCache(path=self.db_path + '5', hard=True, logger=MockLogger()),
-                middlewares_before=[
-                    lambda: self.set_rows_channels(self.db_path + '5', ['X', 'P'])
-                ],
-                middlewares_after=[
-                    lambda: self.check_db_count_rows(self.db_path + '5', 3, 'channels'),
-                    lambda: self.remove_filename(self.db_path + '5')
-                ],
-            ),
-            SubTest(
                 name="Test 6",
                 description="Invalid fields exception",
                 args={
-                    'channels': [None],
+                    'channels': None,
                     'scrapped': False,
                     'valid': False
                 },
@@ -266,7 +267,7 @@ class TestDBSqlLiteCacheSetChannels(TestDBSqlLiteCache):
                 args={
                     'channels': [
                         {
-                            'channel_id': 'X',
+                            'channel_id': 'XXXX',
                             'priority': 0,
                             'full_description': None,
                             'short_description': None,
@@ -283,10 +284,10 @@ class TestDBSqlLiteCacheSetChannels(TestDBSqlLiteCache):
                 },
                 object=DBSqlLiteCache(path=self.db_path + '9', hard=True, logger=MockLogger()),
                 middlewares_before=[
-                    lambda: self.set_rows_channels(self.db_path + '9', ['X', 'P'], True)
+                    lambda: self.set_rows_channels(self.db_path + '9', ['XXXX', 'P'], True)
                 ],
                 middlewares_after=[
-                    lambda: self.check_field_channels(self.db_path + '9', 1, 'X', field='base_channel'),
+                    lambda: self.check_field_channels(self.db_path + '9', 1, 'XXXX', field='base_channel'),
                     lambda: self.check_field_channels(self.db_path + '9', 1, 'P', field='base_channel'),
                     lambda: self.check_field_channels(self.db_path + '9', 0, 'Y', field='base_channel'),
                     lambda: self.check_db_count_rows(self.db_path + '9', 3, 'channels'),
@@ -307,7 +308,7 @@ class TestDBSqlLiteCacheSetBaseChannels(TestDBSqlLiteCache):
             SubTest(
                 name="Test 1",
                 description="All fields are not None",
-                args={'channels_id': ['X']},
+                args={'channels_id': ['XXXXX']},
                 object=DBSqlLiteCache(path=self.db_path + '1', hard=True),
                 middlewares_before=[],
                 middlewares_after=[
@@ -364,7 +365,7 @@ class TestDBSqlLiteCacheSetBaseChannels(TestDBSqlLiteCache):
             SubTest(
                 name="Test 6",
                 description="Invalid fields exception",
-                args={'channels_id': [None]},
+                args={'channels_id': None},
                 object=DBSqlLiteCache(path=self.db_path + '6', hard=True, logger=MockLogger()),
                 exception=Exception,
                 middlewares_after=[lambda: self.remove_filename(self.db_path + '6')],
@@ -466,13 +467,13 @@ class TestDBSqlLiteCacheSetFailedChannel(TestDBSqlLiteCache):
             SubTest(
                 name="Test 1",
                 description="Modify old value",
-                args={'channel_id': 'X'},
+                args={'channel_id': 'XXXX'},
                 object=DBSqlLiteCache(path=self.db_path+'1', hard=True),
                 middlewares_before=[
-                    lambda: self.set_rows_channels(self.db_path + '1', ['X', 'P'], valid=True),
+                    lambda: self.set_rows_channels(self.db_path + '1', ['XXXX', 'P'], valid=True),
                 ],
                 middlewares_after=[
-                    lambda: self.check_field_channels(self.db_path + '1', 0, 'X', field='valid'),
+                    lambda: self.check_field_channels(self.db_path + '1', 0, 'XXXX', field='valid'),
                     lambda: self.check_field_channels(self.db_path + '1', 1, 'P', field='valid'),
                     lambda: self.remove_filename(self.db_path+'1')
                 ],
@@ -502,13 +503,13 @@ class TestDBSqlLiteCacheSetDownloadedChannel(TestDBSqlLiteCache):
             SubTest(
                 name="Test 1",
                 description="Modify old value",
-                args={'channel_id': 'X'},
+                args={'channel_id': 'XXXX'},
                 object=DBSqlLiteCache(path=self.db_path+'1', hard=True),
                 middlewares_before=[
-                    lambda: self.set_rows_channels(self.db_path + '1', ['X', 'P'], valid=True, downloaded=False),
+                    lambda: self.set_rows_channels(self.db_path + '1', ['XXXX', 'P'], valid=True, downloaded=False),
                 ],
                 middlewares_after=[
-                    lambda: self.check_field_channels(self.db_path + '1', 1, 'X', field='downloaded'),
+                    lambda: self.check_field_channels(self.db_path + '1', 1, 'XXXX', field='downloaded'),
                     lambda: self.check_field_channels(self.db_path + '1', 0, 'P', field='downloaded'),
                     lambda: self.remove_filename(self.db_path+'1')
                 ],
@@ -564,10 +565,10 @@ class TestDBSqlLiteCacheGetBestChannelId(TestDBSqlLiteCache):
                 description="There are valid channel the only",
                 object=DBSqlLiteCache(path=self.db_path+'3', hard=True),
                 middlewares_before=[
-                    lambda: self.set_rows_channels(self.db_path+'3', ['X'], base_channel=False, valid=True,
+                    lambda: self.set_rows_channels(self.db_path+'3', ['XXXX'], base_channel=False, valid=True,
                                                    downloaded=False, scrapped=False, priority=0),
                 ],
-                want='X',
+                want='XXXX',
                 middlewares_after=[
                     lambda: self.remove_filename(self.db_path+'3')
                 ],
@@ -695,10 +696,10 @@ class TestDBSqlLiteCacheCheckExistVideo(TestDBSqlLiteCache):
             SubTest(
                 name="Test 1",
                 description="Modify old value",
-                args={'video_id': 'Y'},
+                args={'video_id': 'YYYY'},
                 object=DBSqlLiteCache(path=self.db_path+'1', hard=True),
                 middlewares_before=[
-                    lambda: self.set_rows_videos(self.db_path + '1', ['X', 'P'], valid=True),
+                    lambda: self.set_rows_videos(self.db_path + '1', ['XXXX', 'P'], valid=True),
                 ],
                 want=False,
                 middlewares_after=[lambda: self.remove_filename(self.db_path+'1')],
@@ -720,7 +721,7 @@ class TestDBSqlLiteCacheCheckExistVideo(TestDBSqlLiteCache):
                 args={'video_id': 'Y'},
                 object=DBSqlLiteCache(path=self.db_path+'3', hard=True),
                 middlewares_before=[
-                    lambda: self.set_rows_videos(self.db_path + '3', ['X', 'P'], valid=True),
+                    lambda: self.set_rows_videos(self.db_path + '3', ['XXXX', 'P'], valid=True),
                 ],
                 want=False,
                 middlewares_after=[lambda: self.remove_filename(self.db_path+'3')],
@@ -739,13 +740,13 @@ class TestDBSqlLiteCacheSetFailedVideo(TestDBSqlLiteCache):
             SubTest(
                 name="Test 1",
                 description="Modify old value",
-                args={'video_id': 'X'},
+                args={'video_id': 'XXXX'},
                 object=DBSqlLiteCache(path=self.db_path+'1', hard=True),
                 middlewares_before=[
-                    lambda: self.set_rows_videos(self.db_path + '1', ['X', 'P'], valid=True),
+                    lambda: self.set_rows_videos(self.db_path + '1', ['XXXX', 'P'], valid=True),
                 ],
                 middlewares_after=[
-                    lambda: self.check_field_videos(self.db_path + '1', 0, 'X', field='valid'),
+                    lambda: self.check_field_videos(self.db_path + '1', 0, 'XXXX', field='valid'),
                     lambda: self.check_field_videos(self.db_path + '1', 1, 'P', field='valid'),
                     lambda: self.remove_filename(self.db_path+'1')
                 ],

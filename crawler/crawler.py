@@ -122,7 +122,9 @@ class YoutubeCrawler:
             self.logger.alert(err)
 
     def process(self, channel_ids=None):
-        if not (channel_ids is None or type(channel_ids) is list):
+        if channel_ids is None:
+            channel_ids = []
+        if not type(channel_ids) is list:
             raise utils.CrawlerError("channel_ids is not list")
         self.logger.info("Setting channel ids from arguments into Cache")
 
@@ -136,8 +138,7 @@ class YoutubeCrawler:
             msg = "Problem with extracting Base channel"
             channel_id = self.__cache.get_best_channel_id()
         except Exception as e:
-            self.logger.error(utils.CrawlerError(e=e, msg=msg))
-            self.logger.alert(e)
+            self.logger.alert(utils.CrawlerError(e=e, msg=msg))
             # raise exception
 
         while channel_id is not None:
