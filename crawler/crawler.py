@@ -122,6 +122,8 @@ class YoutubeCrawler:
             self.logger.alert(err)
 
     def process(self, channel_ids=None):
+        if not (channel_ids is None or type(channel_ids) is list):
+            raise utils.CrawlerError("channel_ids is not list")
         self.logger.info("Setting channel ids from arguments into Cache")
 
         msg = None
