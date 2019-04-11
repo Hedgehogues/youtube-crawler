@@ -5,7 +5,7 @@ from crawler.utils import ReloadTokenError
 
 
 class BaseParser:
-    def __init__(self, jq_path, max_page=1):
+    def __init__(self, jq_path, tab, max_page=1):
         """
         This parser loads the only page
 
@@ -17,6 +17,7 @@ class BaseParser:
         self.max_page = max_page
         with open(jq_path) as fd_fq:
             self._jq_load = jq(fd_fq.read())
+        self.tab = tab
 
     def is_final_page(self):
         return True
@@ -38,13 +39,12 @@ class ReloaderParser(BaseParser):
         :param jq_load_path (str): path to jq-script of load data
         :param jq_reload_path (str): path to jq-script of reload data
         """
-        super().__init__(max_page=max_page, jq_path=jq_load_path)
+        super().__init__(max_page=max_page, tab=tab, jq_path=jq_load_path)
 
         self.__count_pages = 0
         with open(jq_reload_path) as fd_fq:
             self._jq_reload = jq(fd_fq.read())
         self.next_page_token = None
-        self.tab = tab
 
     def is_final_page(self):
         return not (self.max_page is None or self.__count_pages < self.max_page)
@@ -99,7 +99,7 @@ class AboutParser(BaseParser):
 
         :param jq_path (str): path to jq-script of load data
         """
-        super().__init__(jq_path=jq_path, max_page=1)
+        super().__init__(jq_path=jq_path, tab=Tab.About, max_page=1)
 
 
 class HomePageParser(BaseParser):
@@ -109,4 +109,4 @@ class HomePageParser(BaseParser):
 
         :param jq_path (str): path to jq-script of load data
         """
-        super().__init__(jq_path=jq_path, max_page=1)
+        super().__init__(jq_path=jq_path, tab=Tab.About, max_page=1)
