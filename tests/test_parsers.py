@@ -25,7 +25,7 @@ class TestReloaderParser(BaseTestClass):
             SubTest(
                 name="Test 1",
                 description="Invalid data_config. Problem with itct field",
-                args={'data_config': {}, 'is_reload': False},
+                args={'data_config': {}},
                 object=parsers.ReloaderParser(
                     max_page=None,
                     tab=MockTab.TEST0,
@@ -37,7 +37,7 @@ class TestReloaderParser(BaseTestClass):
             SubTest(
                 name="Test 2",
                 description="Invalid data_config. Problem with ctoken field",
-                args={'data_config': {'next_page_token': {'itct': 'token'}}, 'is_reload': False},
+                args={'data_config': {'next_page_token': {'itct': 'token'}}},
                 object=parsers.ReloaderParser(
                     max_page=None,
                     tab=MockTab.TEST0,
@@ -50,8 +50,7 @@ class TestReloaderParser(BaseTestClass):
                 name="Test 3",
                 description="Valid data config.",
                 args={
-                    'data_config': {'next_page_token': {'itct': 'token', 'ctoken': 'token'}, MockTab.TEST0: []},
-                    'is_reload': False
+                    'data_config': {'next_page_token': {'itct': 'token', 'ctoken': 'token'}, "test0": []}
                 },
                 object=parsers.ReloaderParser(
                     max_page=None,
@@ -65,8 +64,7 @@ class TestReloaderParser(BaseTestClass):
                 name="Test 4",
                 description="Valid data config. There is not ctoken",
                 args={
-                    'data_config': {'next_page_token': {'itct': 'token', 'ctoken': None}, MockTab.TEST0: []},
-                    'is_reload': False
+                    'data_config': {'next_page_token': {'itct': 'token', 'ctoken': None}, "test0": []}
                 },
                 object=parsers.ReloaderParser(
                     max_page=None,
@@ -80,8 +78,7 @@ class TestReloaderParser(BaseTestClass):
                 name="Test 5",
                 description="Valid data config. There is not itct",
                 args={
-                    'data_config': {'next_page_token': {'itct': None, 'ctoken': 'token'}, MockTab.TEST0: []},
-                    'is_reload': False
+                    'data_config': {'next_page_token': {'itct': None, 'ctoken': 'token'}, "test0": []}
                 },
                 object=parsers.ReloaderParser(
                     max_page=None,
@@ -118,8 +115,7 @@ class TestReloaderParser(BaseTestClass):
             jq_reload_path=self.__jq_path,
         )
         parse_kwargs = {
-            'data_config': {'next_page_token': {'itct': None, 'ctoken': 'token'}, MockTab.TEST0: []},
-            'is_reload': False
+            'data_config': {'next_page_token': {'itct': None, 'ctoken': 'token'}, "test0": []}
         }
         for i in range(times):
             object.parse(**parse_kwargs)

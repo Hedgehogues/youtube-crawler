@@ -52,8 +52,9 @@ class YoutubeCrawler:
         while count < self.__max_attempts:
             try:
                 return fn(*args, **kwargs)
-            except Exception as e:
-                self.logger.warn(utils.CrawlerError(e=e, msg="problem into scrapper. retry: %d" % count))
+            except Exception as e_:
+                e = e_
+                self.logger.warn(utils.CrawlerError(e=e_, msg="problem into scrapper. retry: %d" % count))
                 count += 1
         raise e
 
@@ -115,7 +116,7 @@ class YoutubeCrawler:
                 full_video_descr = self.scrappy_decorator(self.__video_downloader.load, short_video_descr)
             except Exception as e:
                 self.__cache.update_failed_video(video_id)
-                self.logger.warn(e)
+                self.logger.warn(utils.CrawlerError(e=e, msg="Video not download"))
                 continue
 
             data = self.__create_video(video_id, channel_id, full_video_descr, short_video_descr)
@@ -152,7 +153,7 @@ class YoutubeCrawler:
                 self.__cache.set_channels(channel, scrapped=True, valid=True)
             except Exception as e:
                 self.__set_failed_channel(channel_id)
-                self.logger.error(e)
+                self.logger.error(utils.CrawlerError(e=e, msg="Channel info not download"))
                 continue
 
             neighb_channels = None

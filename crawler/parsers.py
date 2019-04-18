@@ -1,7 +1,6 @@
 from jq import jq
 from crawler import utils
 from crawler.loaders import Tab
-from crawler.utils import ReloadTokenError
 
 
 class BaseParser:
@@ -22,9 +21,7 @@ class BaseParser:
     def is_final_page(self):
         return True
 
-    def parse(self, data_config, is_reload):
-        if is_reload:
-            raise ReloadTokenError("This parser not implement reload options. Token cannot be received")
+    def parse(self, data_config):
         data = self._jq_load.transform(data_config)
         return data, None
 
@@ -49,7 +46,7 @@ class ReloaderParser(BaseParser):
     def is_final_page(self):
         return not (self.max_page is None or self.__count_pages < self.max_page)
 
-    def parse(self, data_config, is_reload):
+    def parse(self, data_config):
         self.__count_pages += 1
         data = self._jq_load.transform(data_config)
         try:
@@ -58,11 +55,11 @@ class ReloaderParser(BaseParser):
         except Exception as e:
             raise utils.ParserError("Next page token is not available", e)
         if next_page_token is not None and itct is not None:
-            return data[self.tab], {
+            return data[self.tab.value], {
                 'ctoken': next_page_token,
                 'itct':  itct,
             }
-        return data[self.tab], None
+        return data[self.tab.value], None
 
 
 class VideosParser(ReloaderParser):
@@ -89,7 +86,7 @@ class ChannelsParser(ReloaderParser):
         :param jq_load_path (str): path to jq-script of load data
         :param jq_reload_path (str): path to jq-script of reload data
         """
-        super().__init__(max_page, Tab.Channels, jq_load_path, jq_reload_path)
+        super().__init__(max_page=max_page, tab=Tab.Channels, jq_load_path=jq_load_path, jq_reload_path=jq_reload_path)
 
 
 class AboutParser(BaseParser):
@@ -109,4 +106,4 @@ class HomePageParser(BaseParser):
 
         :param jq_path (str): path to jq-script of load data
         """
-        super().__init__(jq_path=jq_path, tab=Tab.About, max_page=1)
+        super().__init__(jq_path=jq_path, tab=Tab.HomePage, max_page=1)

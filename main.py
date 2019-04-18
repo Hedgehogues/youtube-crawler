@@ -7,7 +7,7 @@ from crawler import parsers
 
 channel_ids = ['UCzAzPC4VWIMHqrnIM1iBPsQ']
 
-x = YoutubeCrawler(cache=DBSqlLiteCache(hard=True))
+x = YoutubeCrawler(cache=DBSqlLiteCache(hard=True), max_attempts=1)
 x.process(channel_ids)
 
 

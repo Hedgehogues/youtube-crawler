@@ -15,6 +15,7 @@ class Scrapper:
                     * channels
                     * about
                     * TODO: community
+                    * TODO: playlist (https://www.youtube.com/user/Sunfish737/playlists)
                 If you want to add new pages, you should be add new constants int crawler.loaders.Tab
         """
 
@@ -33,7 +34,7 @@ class Scrapper:
         descr_slice = []
         while not p.is_final_page() and next_page_token is not None:
             data_config = self.reloader.load(next_page_token)
-            descr, next_page_token = p.parse(data_config, is_reload=True)
+            descr, next_page_token = p.parse(data_config)
             descr_slice.append(descr)
         return descr_slice
 
@@ -43,6 +44,6 @@ class Scrapper:
             self.logger.info("Loading: %s" % p.tab.value)
             player_config, data_config = self.loader.load(channel_id, p.tab, self.query_params[p.tab])
             self.logger.info("Loading was finished: %s" % p.tab.value)
-            descr, next_page_token = p.parse(data_config, is_reload=False)
+            descr, next_page_token = p.parse(data_config)
             descrs[p.tab] = [descr] + self.__reload_pages(p, next_page_token)
         return descrs

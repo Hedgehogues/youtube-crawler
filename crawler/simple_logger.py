@@ -4,11 +4,11 @@ class SimpleLogger:
         print("[INFO]: %s" % msg)
 
     def warn(self, err):
-        print("[WARN]: %s. StackError: %s" % (err.msg, err.get_stack_errors()))
+        print("[WARN]: %s" % err)
 
     def alert(self, err):
-        print("[ALERT]: %s. StackError: %s" % (err.msg, err.get_stack_errors()))
+        print("[ALERT]: %s" % err)
         raise err
 
     def error(self, err):
-        print("[ERROR]: %s. StackError: %s" % (err.msg, err.get_stack_errors()))
+        print("[ERROR]: %s" % err)
