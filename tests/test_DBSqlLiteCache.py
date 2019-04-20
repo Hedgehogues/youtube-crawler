@@ -294,6 +294,39 @@ class TestDBSqlLiteCacheSetChannels(TestDBSqlLiteCache):
                     lambda: self.remove_filename(self.db_path + '9')
                 ],
             ),
+            SubTest(
+                name="Test 10",
+                description="Full description is not None",
+                args={
+                    'channels': [
+                        {
+                            'channel_id': 'XXXX',
+                            'priority': 0,
+                            'full_description': None,
+                            'short_description': "{'channel_id': 'XXXX'}",
+                        },
+                        {
+                            'channel_id': 'Y',
+                            'priority': 0,
+                            'full_description': None,
+                            'short_description': None,
+                        }
+                    ],
+                    'scrapped': False,
+                    'valid': False
+                },
+                object=DBSqlLiteCache(path=self.db_path + '10', hard=True, logger=MockLogger()),
+                middlewares_before=[
+                    lambda: self.set_rows_channels(self.db_path + '10', ['XXXX', 'P'], True)
+                ],
+                middlewares_after=[
+                    lambda: self.check_field_channels(self.db_path + '10', 1, 'XXXX', field='base_channel'),
+                    lambda: self.check_field_channels(self.db_path + '10', 1, 'P', field='base_channel'),
+                    lambda: self.check_field_channels(self.db_path + '10', 0, 'Y', field='base_channel'),
+                    lambda: self.check_db_count_rows(self.db_path + '10', 3, 'channels'),
+                    lambda: self.remove_filename(self.db_path + '10')
+                ],
+            ),
         ]
 
     def test(self):

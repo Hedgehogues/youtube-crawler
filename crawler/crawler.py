@@ -4,6 +4,8 @@ from crawler.loaders import Loader, Reloader, YoutubeDlLoader, Tab
 from crawler.scrapper import Scrapper
 from crawler.simple_logger import SimpleLogger
 
+import json
+
 
 class YoutubeCrawler:
     # TODO: указано скачать не все видео, а только часть, то при повторной загрузке, будет выбран другой набор видео
@@ -52,9 +54,8 @@ class YoutubeCrawler:
         while count < self.__max_attempts:
             try:
                 return fn(*args, **kwargs)
-            except Exception as e_:
-                e = e_
-                self.logger.warn(utils.CrawlerError(e=e_, msg="problem into scrapper. retry: %d" % count))
+            except Exception as e:
+                self.logger.warn(utils.CrawlerError(e=e, msg="problem into scrapper. retry: %d" % count))
                 count += 1
         raise e
 
@@ -81,11 +82,15 @@ class YoutubeCrawler:
         # TODO: заменить на алгоритмы valid и priority
         priority = 0
 
+        new_full_descr = {}
+        for k in full_descr:
+            new_full_descr[k.value] = full_descr[k]
+
         return [{
             'channel_id': channel_id,
             'priority': priority,
-            'full_description': full_descr,
-            'short_description': short_descr,
+            'full_description': json.dumps(new_full_descr) if new_full_descr is not None else None,
+            'short_description': json.dumps(short_descr) if short_descr is not None else None,
         }]
 
     def __get_neighb_channels(self, descr):
@@ -116,7 +121,7 @@ class YoutubeCrawler:
                 full_video_descr = self.scrappy_decorator(self.__video_downloader.load, short_video_descr)
             except Exception as e:
                 self.__cache.update_failed_video(video_id)
-                self.logger.warn(utils.CrawlerError(e=e, msg="Video not download"))
+                self.logger.warn(e)
                 continue
 
             data = self.__create_video(video_id, channel_id, full_video_descr, short_video_descr)
@@ -153,7 +158,7 @@ class YoutubeCrawler:
                 self.__cache.set_channels(channel, scrapped=True, valid=True)
             except Exception as e:
                 self.__set_failed_channel(channel_id)
-                self.logger.error(utils.CrawlerError(e=e, msg="Channel info not download"))
+                self.logger.error(e)
                 continue
 
             neighb_channels = None

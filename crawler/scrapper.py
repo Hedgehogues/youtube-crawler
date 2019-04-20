@@ -32,18 +32,23 @@ class Scrapper:
 
     def __reload_pages(self, p, next_page_token):
         descr_slice = []
+        if not p.is_final_page() and next_page_token is not None:
+            self.logger.info("Reloading: %s" % p.tab.value)
         while not p.is_final_page() and next_page_token is not None:
             data_config = self.reloader.load(next_page_token)
             descr, next_page_token = p.parse(data_config, is_reload=True)
             descr_slice.append(descr)
+        if len(descr_slice) != 0:
+            self.logger.info("Reloading was finished: %s" % p.tab.value)
         return descr_slice
 
     def parse(self, channel_id):
         descrs = {}
         for p in self.parsers:
-            self.logger.info("Loading: %s" % p.tab.value)
+            self.logger.info("Loading: ******** %s ********" % p.tab.value)
             player_config, data_config = self.loader.load(channel_id, p.tab, self.query_params[p.tab])
             self.logger.info("Loading was finished: %s" % p.tab.value)
             descr, next_page_token = p.parse(data_config, is_reload=False)
-            descrs[p.tab] = [descr] + self.__reload_pages(p, next_page_token)
+            if len(descr) != 0:
+                descrs[p.tab] = [descr] + self.__reload_pages(p, next_page_token)
         return descrs
