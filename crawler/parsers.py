@@ -1,6 +1,7 @@
 from jq import jq
 from crawler import utils
 from crawler.loaders import Tab
+from crawler.utils import ReloadTokenError
 
 
 class BaseParser:
@@ -21,7 +22,9 @@ class BaseParser:
     def is_final_page(self):
         return True
 
-    def parse(self, data_config):
+    def parse(self, data_config, is_reload):
+        if is_reload:
+            raise ReloadTokenError("This parser not implement reload options. Token cannot be received")
         data = self._jq_load.transform(data_config)
         return data, None
 
@@ -46,7 +49,7 @@ class ReloaderParser(BaseParser):
     def is_final_page(self):
         return not (self.max_page is None or self.__count_pages < self.max_page)
 
-    def parse(self, data_config):
+    def parse(self, data_config, is_reload):
         self.__count_pages += 1
         if is_reload:
             data = self._jq_reload.transform(data_config)
