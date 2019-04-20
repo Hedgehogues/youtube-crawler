@@ -48,7 +48,10 @@ class ReloaderParser(BaseParser):
 
     def parse(self, data_config):
         self.__count_pages += 1
-        data = self._jq_load.transform(data_config)
+        if is_reload:
+            data = self._jq_reload.transform(data_config)
+        else:
+            data = self._jq_load.transform(data_config)
         try:
             itct = data['next_page_token']['itct']
             next_page_token = data['next_page_token']['ctoken']

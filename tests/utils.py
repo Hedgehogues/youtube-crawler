@@ -18,7 +18,7 @@ class BaseTestClass(unittest.TestCase):
         res = func(obj, kwargs)
         if not ignore:
             diff = deepdiff.DeepDiff(want, res)
-            self.assertEqual(0, len(diff), msg=msg)
+            self.assertEqual(0, len(diff), msg="want=%s, got=%s" % (want, res))
 
     def __exception(self, obj, kwargs, exception, func):
         self.assertRaises(exception, func, obj, kwargs)
