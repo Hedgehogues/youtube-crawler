@@ -1,5 +1,3 @@
-import sqlite3
-
 from crawler import parsers, utils
 from crawler.cache import DBSqlLiteCache
 from crawler.loaders import Loader, Reloader, YoutubeDlLoader, Tab

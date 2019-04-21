@@ -91,8 +91,13 @@ class Loader(BaseLoader):
             raise utils.JsonSerializableError(msg, e)
 
 
+class YoutubeDlLoaderFormat(Enum):
+    MP3 = 'mp3'
+    WAV = 'wav'
+
+
 class YoutubeDlLoader:
-    def __init__(self, ydl_params=None):
+    def __init__(self, ydl_params=None, f=YoutubeDlLoaderFormat.MP3):
         self._base_url = 'https://www.youtube.com/watch'
 
         ydl = youtube_dl.YoutubeDL({'listsubtitles': True})
@@ -102,7 +107,7 @@ class YoutubeDlLoader:
         if audio_ydl_params is None:
             audio_ydl_params = {
                 'writeautomaticsub': True,
-                'outtmpl': 'data/videos/youtube/%(channel_id)s/%(id)s.wav',
+                'outtmpl': 'data/videos/youtube/%(channel_id)s/%(id)s.' + f.value,
                 'format': 'bestaudio/best',
                 'prefer-avconv': True,
                 'subtitleslangs': ['ru'],
