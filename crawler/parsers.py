@@ -26,14 +26,14 @@ class BaseParser:
         """
         return True
 
-    def parse(self, data_config, is_reload):
+    def parse(self, config, is_reload):
         """
         :return: list
         :exception ReloadTokenError: if this method executes with param is_reload==True, then this exception is executed
         """
         if is_reload:
             raise ReloadTokenError("This parser not implement reload options. Token cannot be received")
-        data = self._jq_load.transform(data_config)
+        data = self._jq_load.transform(config)
         return [data], None
 
 
@@ -61,19 +61,19 @@ class ReloaderParser(BaseParser):
         """
         return not (self.max_page is None or self.__count_pages < self.max_page)
 
-    def parse(self, data_config, is_reload):
+    def parse(self, config, is_reload):
         """
         This method return True if max count pages is downloaded else False
-        :param data_config: downloaded data with a youtube parser
+        :param config: downloaded data with a youtube parser
         :param is_reload: does it need reload parser or no (true or false)
         :return: list
         :exception utils.ParserError: if there is not next_page_token, then it will be execute this exception
         """
         self.__count_pages += 1
         if is_reload:
-            data = self._jq_reload.transform(data_config)
+            data = self._jq_reload.transform(config)
         else:
-            data = self._jq_load.transform(data_config)
+            data = self._jq_load.transform(config)
         try:
             itct = data['next_page_token']['itct']
             next_page_token = data['next_page_token']['ctoken']

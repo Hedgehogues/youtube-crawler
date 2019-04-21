@@ -61,18 +61,17 @@ class YoutubeCrawler:
 
     @staticmethod
     def __create_video(video_id, channel_id, full_descr, short_descr):
-        subtitles = full_descr['subtitles']
         # TODO: заменить на алгоритмы valid и priority
         valid = True
         priority = 0
 
-        del full_descr['subtitles']
+        if 'subtitles' in full_descr:
+            del full_descr['subtitles']
         return {
             'video_id': video_id,
             'channel_id': channel_id,
-            'full_description': full_descr,
-            'short_description': short_descr,
-            'subtitles': subtitles,
+            'full_description': json.dumps(full_descr),
+            'short_description': json.dumps(short_descr),
             'valid': valid,
             'priority': priority
         }
@@ -108,8 +107,8 @@ class YoutubeCrawler:
 
     def __download_videos(self, descrs):
         channel_id = descrs[Tab.HomePage][0]['owner_channel']['id']
-        for short_video_descr in descrs[Tab.Videos]:
-            video_id = short_video_descr['id']
+        for descr in descrs[Tab.Videos]:
+            video_id = descr['id']
 
             # Check in Cache video_id
             if self.__cache.check_exist_video(video_id):
@@ -118,15 +117,17 @@ class YoutubeCrawler:
 
             # Download video
             try:
-                full_video_descr = self.scrappy_decorator(self.__video_downloader.load, short_video_descr)
+                full_video_descr = self.scrappy_decorator(self.__video_downloader.load, video_id)
             except Exception as e:
                 self.__cache.update_failed_video(video_id)
                 self.logger.warn(e)
                 continue
 
-            data = self.__create_video(video_id, channel_id, full_video_descr, short_video_descr)
-            err = self.__cache.insert_video_descr(data)
-            self.logger.alert(err)
+            data = self.__create_video(video_id, channel_id, full_video_descr, descr)
+            try:
+                self.__cache.insert_video_descr(data)
+            except Exception as e:
+                self.logger.alert(e)
 
     def process(self, channel_ids=None):
         if channel_ids is None:

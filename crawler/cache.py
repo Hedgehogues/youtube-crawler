@@ -67,9 +67,9 @@ class DBSqlLiteCache:
       channel_id text,
       video_id text PRIMARY KEY,
       valid boolean,
-      downloaded boolean,
       priority float,
-      description text
+      full_description text,
+      short_description text
     );'''
 
     __sql_update_channel = '''
@@ -103,11 +103,11 @@ class DBSqlLiteCache:
       channel_id,
       video_id,
       valid,
-      downloaded,
       priority,
-      description
+      full_description,
+      short_description
     ) 
-    values(?, ?, ?, ?, ?, ?, ?)
+    values(?, ?, ?, ?, ?, ?)
     '''
 
     __sql_insert_base_channel = '''
@@ -230,9 +230,19 @@ class DBSqlLiteCache:
             }
         )
         """
+
+        data = (
+            video['channel_id'],
+            video['video_id'],
+            video['valid'],
+            video['priority'],
+            video['full_description'],
+            video['short_description'],
+        )
+
         # TODO: this method doesn't tested
         conn = sqlite3.connect(self.db_path)
-        conn.execute(self.__sql_insert_video, video)
+        conn.execute(self.__sql_insert_video, data)
         conn.commit()
         conn.close()
 

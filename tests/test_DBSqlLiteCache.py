@@ -10,13 +10,13 @@ class TestDBSqlLiteCache(BaseTestClass):
     db_path = 'data/test.sqlite'
 
     @staticmethod
-    def set_rows_videos(db_path, video_ids, valid=True, downloaded=False, priority=0.):
+    def set_rows_videos(db_path, video_ids, valid=True, priority=0.):
         conn = sqlite3.connect(db_path)
         query = 'insert into videos' \
-                '(video_id, valid, downloaded, priority) ' \
-                'values(?, ?, ?, ?)'
+                '(video_id, valid, priority) ' \
+                'values(?, ?, ?)'
         for video_id in video_ids:
-            conn.execute(query, (video_id, valid, downloaded, priority))
+            conn.execute(query, (video_id, valid, priority))
         conn.commit()
         conn.close()
 
