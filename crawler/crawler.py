@@ -82,8 +82,9 @@ class YoutubeCrawler:
         priority = 0
 
         new_full_descr = {}
-        for k in full_descr:
-            new_full_descr[k.value] = full_descr[k]
+        if full_descr is not None:
+            for k in full_descr:
+                new_full_descr[k.value] = full_descr[k]
 
         return [{
             'channel_id': channel_id,
@@ -94,9 +95,8 @@ class YoutubeCrawler:
 
     def __get_neighb_channels(self, descr):
         channels = []
-        for page in descr[Tab.Channels]:
-            for channel in page['channels']:
-                channels += self.__create_cur_channel(channel['id'], None, channel)
+        for channel in descr[Tab.Channels]:
+            channels += self.__create_cur_channel(channel['channel_id'], None, channel)
         return channels
 
     def __set_failed_channel(self, channel_id):
