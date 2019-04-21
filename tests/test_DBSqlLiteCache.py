@@ -1,7 +1,7 @@
 import sqlite3
 
 from crawler import utils
-from crawler.cache import DBSqlLiteCache
+from crawler.cache import DBSqlLiteCache, DB_MOD
 from tests import MockLogger
 from tests.utils import BaseTestClass, SubTest
 
@@ -105,7 +105,7 @@ class TestDBSqlLiteCacheSetChannels(TestDBSqlLiteCache):
                     'scrapped': False,
                     'valid': False
                 },
-                object=DBSqlLiteCache(path=self.db_path + '5', hard=True, logger=MockLogger()),
+                object=DBSqlLiteCache(path=self.db_path + '5', db_mod=True, logger=MockLogger()),
                 middlewares_before=[
                     lambda: self.set_rows_channels(self.db_path + '5', ['XXXX', 'P'])
                 ],
@@ -129,7 +129,7 @@ class TestDBSqlLiteCacheSetChannels(TestDBSqlLiteCache):
                     'scrapped': False,
                     'valid': False
                 },
-                object=DBSqlLiteCache(path=self.db_path + '1', hard=True),
+                object=DBSqlLiteCache(path=self.db_path + '1', db_mod=True),
                 middlewares_before=[],
                 middlewares_after=[
                     lambda: self.check_db_count_rows(self.db_path + '1', 1, 'channels'),
@@ -151,7 +151,7 @@ class TestDBSqlLiteCacheSetChannels(TestDBSqlLiteCache):
                     'scrapped': False,
                     'valid': False
                 },
-                object=DBSqlLiteCache(path=self.db_path + '2', hard=True),
+                object=DBSqlLiteCache(path=self.db_path + '2', db_mod=True),
                 middlewares_before=[],
                 middlewares_after=[
                     lambda: self.check_db_count_rows(self.db_path + '2', 1, 'channels'),
@@ -179,7 +179,7 @@ class TestDBSqlLiteCacheSetChannels(TestDBSqlLiteCache):
                     'scrapped': False,
                     'valid': False
                 },
-                object=DBSqlLiteCache(path=self.db_path + '3', hard=True),
+                object=DBSqlLiteCache(path=self.db_path + '3', db_mod=True),
                 middlewares_before=[],
                 middlewares_after=[
                     lambda: self.check_db_count_rows(self.db_path + '3', 2, 'channels'),
@@ -207,7 +207,7 @@ class TestDBSqlLiteCacheSetChannels(TestDBSqlLiteCache):
                     'scrapped': False,
                     'valid': False
                 },
-                object=DBSqlLiteCache(path=self.db_path + '4', hard=True, logger=MockLogger()),
+                object=DBSqlLiteCache(path=self.db_path + '4', db_mod=True, logger=MockLogger()),
                 middlewares_before=[],
                 middlewares_after=[
                     lambda: self.check_db_count_rows(self.db_path + '4', 1, 'channels'),
@@ -222,7 +222,7 @@ class TestDBSqlLiteCacheSetChannels(TestDBSqlLiteCache):
                     'scrapped': False,
                     'valid': False
                 },
-                object=DBSqlLiteCache(path=self.db_path + '6', hard=True, logger=MockLogger()),
+                object=DBSqlLiteCache(path=self.db_path + '6', db_mod=True, logger=MockLogger()),
                 exception=Exception,
                 middlewares_after=[lambda: self.remove_filename(self.db_path + '6')],
             ),
@@ -241,7 +241,7 @@ class TestDBSqlLiteCacheSetChannels(TestDBSqlLiteCache):
                     'scrapped': False,
                     'valid': False
                 },
-                object=DBSqlLiteCache(path=self.db_path + '7', hard=True, logger=MockLogger()),
+                object=DBSqlLiteCache(path=self.db_path + '7', db_mod=True, logger=MockLogger()),
                 exception=sqlite3.Error,
                 middlewares_after=[
                     lambda: self.remove_filename(self.db_path + '7')
@@ -255,7 +255,7 @@ class TestDBSqlLiteCacheSetChannels(TestDBSqlLiteCache):
                     'scrapped': False,
                     'valid': False
                 },
-                object=DBSqlLiteCache(path=self.db_path + '8', hard=True, logger=MockLogger()),
+                object=DBSqlLiteCache(path=self.db_path + '8', db_mod=True, logger=MockLogger()),
                 middlewares_after=[
                     lambda: self.check_db_count_rows(self.db_path + '8', 0, 'channels'),
                     lambda: self.remove_filename(self.db_path + '8')
@@ -282,7 +282,7 @@ class TestDBSqlLiteCacheSetChannels(TestDBSqlLiteCache):
                     'scrapped': False,
                     'valid': False
                 },
-                object=DBSqlLiteCache(path=self.db_path + '9', hard=True, logger=MockLogger()),
+                object=DBSqlLiteCache(path=self.db_path + '9', db_mod=True, logger=MockLogger()),
                 middlewares_before=[
                     lambda: self.set_rows_channels(self.db_path + '9', ['XXXX', 'P'], True)
                 ],
@@ -315,7 +315,7 @@ class TestDBSqlLiteCacheSetChannels(TestDBSqlLiteCache):
                     'scrapped': False,
                     'valid': False
                 },
-                object=DBSqlLiteCache(path=self.db_path + '10', hard=True, logger=MockLogger()),
+                object=DBSqlLiteCache(path=self.db_path + '10', db_mod=True, logger=MockLogger()),
                 middlewares_before=[
                     lambda: self.set_rows_channels(self.db_path + '10', ['XXXX', 'P'], True)
                 ],
@@ -342,7 +342,7 @@ class TestDBSqlLiteCacheSetBaseChannels(TestDBSqlLiteCache):
                 name="Test 1",
                 description="All fields are not None",
                 args={'channels_id': ['XXXXX']},
-                object=DBSqlLiteCache(path=self.db_path + '1', hard=True),
+                object=DBSqlLiteCache(path=self.db_path + '1', db_mod=True),
                 middlewares_before=[],
                 middlewares_after=[
                     lambda: self.check_db_count_rows(self.db_path + '1', 1, 'channels'),
@@ -353,7 +353,7 @@ class TestDBSqlLiteCacheSetBaseChannels(TestDBSqlLiteCache):
                 name="Test 2",
                 description="Some fields are None",
                 args={'channels_id': ['X']},
-                object=DBSqlLiteCache(path=self.db_path + '2', hard=True),
+                object=DBSqlLiteCache(path=self.db_path + '2', db_mod=True),
                 middlewares_before=[],
                 middlewares_after=[
                     lambda: self.check_db_count_rows(self.db_path + '2', 1, 'channels'),
@@ -364,7 +364,7 @@ class TestDBSqlLiteCacheSetBaseChannels(TestDBSqlLiteCache):
                 name="Test 3",
                 description="Two channel per transaction",
                 args={'channels_id': ['X', 'Y']},
-                object=DBSqlLiteCache(path=self.db_path + '3', hard=True),
+                object=DBSqlLiteCache(path=self.db_path + '3', db_mod=True),
                 middlewares_before=[],
                 middlewares_after=[
                     lambda: self.check_db_count_rows(self.db_path + '3', 2, 'channels'),
@@ -375,7 +375,7 @@ class TestDBSqlLiteCacheSetBaseChannels(TestDBSqlLiteCache):
                 name="Test 4",
                 description="Duplicate channel id into inputs",
                 args={'channels_id': ['X', 'X']},
-                object=DBSqlLiteCache(path=self.db_path + '4', hard=True, logger=MockLogger()),
+                object=DBSqlLiteCache(path=self.db_path + '4', db_mod=True, logger=MockLogger()),
                 middlewares_before=[],
                 middlewares_after=[
                     lambda: self.check_db_count_rows(self.db_path + '4', 1, 'channels'),
@@ -386,7 +386,7 @@ class TestDBSqlLiteCacheSetBaseChannels(TestDBSqlLiteCache):
                 name="Test 5",
                 description="Two channel per transaction",
                 args={'channels_id': ['X', 'Y']},
-                object=DBSqlLiteCache(path=self.db_path + '5', hard=True, logger=MockLogger()),
+                object=DBSqlLiteCache(path=self.db_path + '5', db_mod=True, logger=MockLogger()),
                 middlewares_before=[
                     lambda: self.set_rows_channels(self.db_path + '5', ['X', 'P'])
                 ],
@@ -399,7 +399,7 @@ class TestDBSqlLiteCacheSetBaseChannels(TestDBSqlLiteCache):
                 name="Test 6",
                 description="Invalid fields exception",
                 args={'channels_id': None},
-                object=DBSqlLiteCache(path=self.db_path + '6', hard=True, logger=MockLogger()),
+                object=DBSqlLiteCache(path=self.db_path + '6', db_mod=True, logger=MockLogger()),
                 exception=Exception,
                 middlewares_after=[lambda: self.remove_filename(self.db_path + '6')],
             ),
@@ -407,7 +407,7 @@ class TestDBSqlLiteCacheSetBaseChannels(TestDBSqlLiteCache):
                 name="Test 7",
                 description="Empty",
                 args={'channels_id': []},
-                object=DBSqlLiteCache(path=self.db_path + '7', hard=True, logger=MockLogger()),
+                object=DBSqlLiteCache(path=self.db_path + '7', db_mod=True, logger=MockLogger()),
                 middlewares_after=[
                     lambda: self.check_db_count_rows(self.db_path + '7', 0, 'channels'),
                     lambda: self.remove_filename(self.db_path + '7')
@@ -417,7 +417,7 @@ class TestDBSqlLiteCacheSetBaseChannels(TestDBSqlLiteCache):
                 name="Test 8",
                 description="Existing entries should not be updated",
                 args={'channels_id': ["X", "Y"]},
-                object=DBSqlLiteCache(path=self.db_path + '8', hard=True, logger=MockLogger()),
+                object=DBSqlLiteCache(path=self.db_path + '8', db_mod=True, logger=MockLogger()),
                 middlewares_before=[
                     lambda: self.set_rows_channels(self.db_path + '8', ['X', 'P'])
                 ],
@@ -432,7 +432,7 @@ class TestDBSqlLiteCacheSetBaseChannels(TestDBSqlLiteCache):
                 name="Test 9",
                 description="Replace channel_id",
                 args={'channels_id': ['X'], "replace": True},
-                object=DBSqlLiteCache(path=self.db_path + '9', hard=True, logger=MockLogger()),
+                object=DBSqlLiteCache(path=self.db_path + '9', db_mod=True, logger=MockLogger()),
                 middlewares_before=[
                     lambda: self.set_rows_channels(self.db_path + '9', ['X', 'Y'], base_channel=True)
                 ],
@@ -457,7 +457,7 @@ class TestDBSqlLiteCacheConstructor(TestDBSqlLiteCache):
         mws_after.append(lambda: self.remove_filename(self.db_path + str(i)))
         return SubTest(
             name="Test %d" % i,
-            args={'path': self.db_path + str(i), 'hard': hard},
+            args={'path': self.db_path + str(i), 'db_mod': hard},
             object=DBSqlLiteCache,
             ignore_want=True,
             exception=exception,
@@ -469,20 +469,20 @@ class TestDBSqlLiteCacheConstructor(TestDBSqlLiteCache):
         self.tests = [
             self.__create_subtest_constructor(
                 1,
-                False,
+                DB_MOD.NEW,
                 [],
                 [lambda: self.check_exist_file(self.db_path + '1')]
             ),
             self.__create_subtest_constructor(
                 2,
-                False,
+                DB_MOD.NEW,
                 [lambda: self.create_filename(self.db_path + '2')],
                 [],
                 FileExistsError
             ),
             self.__create_subtest_constructor(
                 3,
-                True,
+                DB_MOD.HARD,
                 [lambda: self.create_filename(self.db_path + '3')],
                 [lambda: self.check_exist_file(self.db_path + '3')]
             ),
@@ -501,7 +501,7 @@ class TestDBSqlLiteCacheSetFailedChannel(TestDBSqlLiteCache):
                 name="Test 1",
                 description="Modify old value",
                 args={'channel_id': 'XXXX'},
-                object=DBSqlLiteCache(path=self.db_path+'1', hard=True),
+                object=DBSqlLiteCache(path=self.db_path+'1', db_mod=True),
                 middlewares_before=[
                     lambda: self.set_rows_channels(self.db_path + '1', ['XXXX', 'P'], valid=True),
                 ],
@@ -515,7 +515,7 @@ class TestDBSqlLiteCacheSetFailedChannel(TestDBSqlLiteCache):
                 name="Test 2",
                 description="Exception undefined value",
                 args={'channel_id': 'Y'},
-                object=DBSqlLiteCache(path=self.db_path+'2', hard=True),
+                object=DBSqlLiteCache(path=self.db_path+'2', db_mod=True),
                 middlewares_before=[
                     lambda: self.set_rows_channels(self.db_path + '2', ['X', 'P'], valid=True),
                 ],
@@ -537,7 +537,7 @@ class TestDBSqlLiteCacheSetDownloadedChannel(TestDBSqlLiteCache):
                 name="Test 1",
                 description="Modify old value",
                 args={'channel_id': 'XXXX'},
-                object=DBSqlLiteCache(path=self.db_path+'1', hard=True),
+                object=DBSqlLiteCache(path=self.db_path+'1', db_mod=True),
                 middlewares_before=[
                     lambda: self.set_rows_channels(self.db_path + '1', ['XXXX', 'P'], valid=True, downloaded=False),
                 ],
@@ -551,7 +551,7 @@ class TestDBSqlLiteCacheSetDownloadedChannel(TestDBSqlLiteCache):
                 name="Test 2",
                 description="Exception undefined value",
                 args={'channel_id': 'Y'},
-                object=DBSqlLiteCache(path=self.db_path+'2', hard=True),
+                object=DBSqlLiteCache(path=self.db_path+'2', db_mod=True),
                 middlewares_before=[
                     lambda: self.set_rows_channels(self.db_path + '2', ['X', 'P'], valid=True),
                 ],
@@ -572,7 +572,7 @@ class TestDBSqlLiteCacheGetBestChannelId(TestDBSqlLiteCache):
             SubTest(
                 name="Test 1",
                 description="Empty cache",
-                object=DBSqlLiteCache(path=self.db_path+'1', hard=True),
+                object=DBSqlLiteCache(path=self.db_path+'1', db_mod=True),
                 middlewares_before=[
                     lambda: self.set_rows_channels(self.db_path+'1', []),
                 ],
@@ -584,7 +584,7 @@ class TestDBSqlLiteCacheGetBestChannelId(TestDBSqlLiteCache):
             SubTest(
                 name="Test 2",
                 description="There are not valid channels",
-                object=DBSqlLiteCache(path=self.db_path+'2', hard=True),
+                object=DBSqlLiteCache(path=self.db_path+'2', db_mod=True),
                 middlewares_before=[
                     lambda: self.set_rows_channels(self.db_path+'2', ['X'], valid=False),
                 ],
@@ -596,7 +596,7 @@ class TestDBSqlLiteCacheGetBestChannelId(TestDBSqlLiteCache):
             SubTest(
                 name="Test 3",
                 description="There are valid channel the only",
-                object=DBSqlLiteCache(path=self.db_path+'3', hard=True),
+                object=DBSqlLiteCache(path=self.db_path+'3', db_mod=True),
                 middlewares_before=[
                     lambda: self.set_rows_channels(self.db_path+'3', ['XXXX'], base_channel=False, valid=True,
                                                    downloaded=False, scrapped=False, priority=0),
@@ -609,7 +609,7 @@ class TestDBSqlLiteCacheGetBestChannelId(TestDBSqlLiteCache):
             SubTest(
                 name="Test 4",
                 description="There are base channel",
-                object=DBSqlLiteCache(path=self.db_path+'4', hard=True),
+                object=DBSqlLiteCache(path=self.db_path+'4', db_mod=True),
                 middlewares_before=[
                     lambda: self.set_rows_channels(self.db_path+'4', ['X'], base_channel=False, valid=True,
                                                    downloaded=False, scrapped=False, priority=0),
@@ -624,7 +624,7 @@ class TestDBSqlLiteCacheGetBestChannelId(TestDBSqlLiteCache):
             SubTest(
                 name="Test 5",
                 description="There are base channel and downloaded",
-                object=DBSqlLiteCache(path=self.db_path+'5', hard=True),
+                object=DBSqlLiteCache(path=self.db_path+'5', db_mod=True),
                 middlewares_before=[
                     lambda: self.set_rows_channels(self.db_path+'5', ['X'], base_channel=False, valid=True,
                                                    downloaded=False, scrapped=False, priority=0),
@@ -641,7 +641,7 @@ class TestDBSqlLiteCacheGetBestChannelId(TestDBSqlLiteCache):
             SubTest(
                 name="Test 6",
                 description="There are base channel priority",
-                object=DBSqlLiteCache(path=self.db_path+'6', hard=True),
+                object=DBSqlLiteCache(path=self.db_path+'6', db_mod=True),
                 middlewares_before=[
                     lambda: self.set_rows_channels(self.db_path+'6', ['X'], base_channel=False, valid=True,
                                                    downloaded=False, scrapped=False, priority=0),
@@ -658,7 +658,7 @@ class TestDBSqlLiteCacheGetBestChannelId(TestDBSqlLiteCache):
             SubTest(
                 name="Test 7",
                 description="There are the only downloaded channel",
-                object=DBSqlLiteCache(path=self.db_path+'7', hard=True),
+                object=DBSqlLiteCache(path=self.db_path+'7', db_mod=True),
                 middlewares_before=[
                     lambda: self.set_rows_channels(self.db_path+'7', ['X'], base_channel=False, valid=True,
                                                    downloaded=True, scrapped=False, priority=0),
@@ -673,7 +673,7 @@ class TestDBSqlLiteCacheGetBestChannelId(TestDBSqlLiteCache):
             SubTest(
                 name="Test 8",
                 description="Scrapped and base channel",
-                object=DBSqlLiteCache(path=self.db_path+'8', hard=True),
+                object=DBSqlLiteCache(path=self.db_path+'8', db_mod=True),
                 middlewares_before=[
                     lambda: self.set_rows_channels(self.db_path+'8', ['X'], base_channel=False, valid=True,
                                                    downloaded=False, scrapped=True, priority=0),
@@ -688,7 +688,7 @@ class TestDBSqlLiteCacheGetBestChannelId(TestDBSqlLiteCache):
             SubTest(
                 name="Test 9",
                 description="Scrapped, base channel, priority",
-                object=DBSqlLiteCache(path=self.db_path+'9', hard=True),
+                object=DBSqlLiteCache(path=self.db_path+'9', db_mod=True),
                 middlewares_before=[
                     lambda: self.set_rows_channels(self.db_path+'9', ['X'], base_channel=False, valid=True,
                                                    downloaded=False, scrapped=True, priority=0),
@@ -703,7 +703,7 @@ class TestDBSqlLiteCacheGetBestChannelId(TestDBSqlLiteCache):
             SubTest(
                 name="Test 10",
                 description="Scrapped, base channel, priority",
-                object=DBSqlLiteCache(path=self.db_path+'10', hard=True),
+                object=DBSqlLiteCache(path=self.db_path+'10', db_mod=True),
                 middlewares_before=[
                     lambda: self.set_rows_channels(self.db_path+'10', ['X'], base_channel=True, valid=True,
                                                    downloaded=False, scrapped=False, priority=0),
@@ -730,7 +730,7 @@ class TestDBSqlLiteCacheCheckExistVideo(TestDBSqlLiteCache):
                 name="Test 1",
                 description="Modify old value",
                 args={'video_id': 'YYYY'},
-                object=DBSqlLiteCache(path=self.db_path+'1', hard=True),
+                object=DBSqlLiteCache(path=self.db_path+'1', db_mod=True),
                 middlewares_before=[
                     lambda: self.set_rows_videos(self.db_path + '1', ['XXXX', 'P'], valid=True),
                 ],
@@ -741,7 +741,7 @@ class TestDBSqlLiteCacheCheckExistVideo(TestDBSqlLiteCache):
                 name="Test 2",
                 description="Modify old value",
                 args={'video_id': 'X'},
-                object=DBSqlLiteCache(path=self.db_path+'2', hard=True),
+                object=DBSqlLiteCache(path=self.db_path+'2', db_mod=True),
                 middlewares_before=[
                     lambda: self.set_rows_videos(self.db_path + '2', ['X', 'P'], valid=True),
                 ],
@@ -752,7 +752,7 @@ class TestDBSqlLiteCacheCheckExistVideo(TestDBSqlLiteCache):
                 name="Test 3",
                 description="Exception undefined value",
                 args={'video_id': 'Y'},
-                object=DBSqlLiteCache(path=self.db_path+'3', hard=True),
+                object=DBSqlLiteCache(path=self.db_path+'3', db_mod=True),
                 middlewares_before=[
                     lambda: self.set_rows_videos(self.db_path + '3', ['XXXX', 'P'], valid=True),
                 ],
@@ -774,7 +774,7 @@ class TestDBSqlLiteCacheSetFailedVideo(TestDBSqlLiteCache):
                 name="Test 1",
                 description="Modify old value",
                 args={'video_id': 'XXXX'},
-                object=DBSqlLiteCache(path=self.db_path+'1', hard=True),
+                object=DBSqlLiteCache(path=self.db_path+'1', db_mod=True),
                 middlewares_before=[
                     lambda: self.set_rows_videos(self.db_path + '1', ['XXXX', 'P'], valid=True),
                 ],
@@ -788,7 +788,7 @@ class TestDBSqlLiteCacheSetFailedVideo(TestDBSqlLiteCache):
                 name="Test 2",
                 description="Exception undefined value",
                 args={'video_id': 'Y'},
-                object=DBSqlLiteCache(path=self.db_path+'2', hard=True),
+                object=DBSqlLiteCache(path=self.db_path+'2', db_mod=True),
                 middlewares_before=[
                     lambda: self.set_rows_channels(self.db_path + '2', ['X', 'P'], valid=True),
                 ],

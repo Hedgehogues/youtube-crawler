@@ -112,7 +112,7 @@ class YoutubeCrawler:
 
             # Check in Cache video_id
             if self.__cache.check_exist_video(video_id):
-                self.logger.info("Such video already exist. VideoId: %d" % video_id)
+                self.logger.info("Such video already exist. VideoId: %s" % video_id)
                 continue
 
             # Download video

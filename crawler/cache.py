@@ -1,8 +1,22 @@
 import os
 import sqlite3
+from enum import Enum
 
 from crawler import utils
 from crawler.simple_logger import SimpleLogger
+
+
+class DB_MOD(Enum):
+    """
+    This is different mod for DataBase
+
+    :cvar HARD: this mod rewrite database
+    :cvar OLD: this mod uses old database or generate exception
+    :cvar OLD: this mod uses new database or generate exception
+    """
+    HARD = 0
+    OLD = 1
+    NEW = 2
 
 
 def create_args_set_update_base_channels(channel_id):
@@ -48,6 +62,8 @@ class DBSqlLiteCache:
         * field valid: if field sets True, then channel have not errors
         * field scrapped: if field sets True, then channel was scrapped
         * field downloaded: if field sets True, then channel was download with all available videos (or limited videos)
+
+    You can set hard, new or old DB (see DB_MOD)
     """
 
     __sql_query_create_channel = '''
@@ -173,19 +189,24 @@ class DBSqlLiteCache:
         conn.execute(self.__sql_query_create_videos)
         conn.commit()
 
-    def __init__(self, path='data/db.sqlite', hard=False, logger=None):
-        if hard and os.path.exists(path):
+    def __init__(self, path='data/db.sqlite', db_mod=DB_MOD.NEW, logger=None):
+        if db_mod == DB_MOD.HARD and os.path.exists(path):
             os.remove(path)
 
         self.logger = logger
         if self.logger is None:
             self.logger = SimpleLogger()
 
-        if os.path.exists(path):
-            raise FileExistsError("Data base already exist. Path: %s" % os.path.abspath(path))
+        if db_mod == DB_MOD.NEW and os.path.exists(path):
+            msg = "Data base has already exist. Set DB_MODE == HARD or DB_MODE == OLD. Path: %s"
+            raise FileExistsError(msg % os.path.abspath(path))
+        if db_mod == DB_MOD.OLD and not os.path.exists(path):
+            msg = "Data base has not already exist. Set DB_MODE == HAR or DB_MODE == NEW. Path: %s"
+            raise FileExistsError(msg % os.path.abspath(path))
         self.db_path = path
         conn = sqlite3.connect(self.db_path)
-        self.__create_db(conn)
+        if db_mod != DB_MOD.OLD:
+            self.__create_db(conn)
         conn.close()
 
     def __deduplicate_channels(self, channels):
