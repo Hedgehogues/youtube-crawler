@@ -201,7 +201,7 @@ class DBSqlLiteCache:
             msg = "Data base has already exist. Set DB_MODE == HARD or DB_MODE == OLD. Path: %s"
             raise FileExistsError(msg % os.path.abspath(path))
         if db_mod == DB_MOD.OLD and not os.path.exists(path):
-            msg = "Data base has not already exist. Set DB_MODE == HAR or DB_MODE == NEW. Path: %s"
+            msg = "Data base has not already exist. Set DB_MODE == HARD or DB_MODE == NEW. Path: %s"
             raise FileExistsError(msg % os.path.abspath(path))
         self.db_path = path
         conn = sqlite3.connect(self.db_path)
@@ -217,6 +217,7 @@ class DBSqlLiteCache:
                 output_channels.append(channel)
                 s.add(channel['channel_id'])
                 continue
+            # TODO: не выводится ошибка. Пофиксить
             msg = "This channel already exists into input channels"
             warn = utils.CacheError(channel_id=channel['channel_id'], msg=msg)
             self.logger.warn(warn)
