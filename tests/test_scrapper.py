@@ -52,7 +52,7 @@ class MockParser:
 
     def parse(self, data_config, is_reload=False):
         self.__count_pages += 1
-        return {'is_reload': is_reload, 'data_config': data_config}, data_config['Token']
+        return [{'is_reload': is_reload, 'data_config': data_config}], data_config['Token']
 
 
 class TestScrapper(BaseTestClass):
@@ -105,9 +105,7 @@ class TestScrapper(BaseTestClass):
                     max_pages={MockTab.TEST0: 1},
                 ),
                 want={
-                    MockTab.TEST0: [
-                        {'is_reload': False, 'data_config': {'Token': None}}
-                    ]
+                    MockTab.TEST0: [{'is_reload': False, 'data_config': {'Token': None}}]
                 },
                 exception=None,
             ),
@@ -121,9 +119,7 @@ class TestScrapper(BaseTestClass):
                     max_pages={MockTab.TEST0: 2},
                 ),
                 want={
-                    MockTab.TEST0: [
-                        {'is_reload': False, 'data_config': {'Token': None}}
-                    ]
+                    MockTab.TEST0: [{'is_reload': False, 'data_config': {'Token': None}}]
                 },
                 exception=None,
             ),
@@ -178,7 +174,7 @@ class TestScrapper(BaseTestClass):
                 },
                 exception=None,
             ),
-            # Two parsers
+            # # Two parsers
             SubTest(
                 name="Test 7",
                 description="Two parser. The same configuration",

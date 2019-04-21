@@ -20,13 +20,21 @@ class BaseParser:
         self.tab = tab
 
     def is_final_page(self):
+        """
+        This method returns True always. Another implementation base class is ReloaderParser (see them)
+        :return: True
+        """
         return True
 
     def parse(self, data_config, is_reload):
+        """
+        :return: list
+        :exception ReloadTokenError: if this method executes with param is_reload==True, then this exception is executed
+        """
         if is_reload:
             raise ReloadTokenError("This parser not implement reload options. Token cannot be received")
         data = self._jq_load.transform(data_config)
-        return data, None
+        return [data], None
 
 
 class ReloaderParser(BaseParser):
@@ -47,9 +55,20 @@ class ReloaderParser(BaseParser):
         self.next_page_token = None
 
     def is_final_page(self):
+        """
+        This method return True if max count pages is downloaded else False
+        :return: True or False
+        """
         return not (self.max_page is None or self.__count_pages < self.max_page)
 
     def parse(self, data_config, is_reload):
+        """
+        This method return True if max count pages is downloaded else False
+        :param data_config: downloaded data with a youtube parser
+        :param is_reload: does it need reload parser or no (true or false)
+        :return: list
+        :exception utils.ParserError: if there is not next_page_token, then it will be execute this exception
+        """
         self.__count_pages += 1
         if is_reload:
             data = self._jq_reload.transform(data_config)

@@ -107,7 +107,7 @@ class YoutubeCrawler:
             self.logger.alert(e)
 
     def __download_videos(self, descrs):
-        channel_id = descrs[Tab.HomePage]['owner_channel']['id']
+        channel_id = descrs[Tab.HomePage][0]['owner_channel']['id']
         for short_video_descr in descrs[Tab.Videos]:
             video_id = short_video_descr['id']
 
@@ -131,7 +131,7 @@ class YoutubeCrawler:
     def process(self, channel_ids=None):
         if channel_ids is None:
             channel_ids = []
-        if not type(channel_ids) is list:
+        if type(channel_ids) is not list:
             raise utils.CrawlerError("channel_ids is not list")
         self.logger.info("Setting channel ids from arguments into Cache")
 
