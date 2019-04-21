@@ -1,3 +1,5 @@
+import sqlite3
+
 from crawler import parsers, utils
 from crawler.cache import DBSqlLiteCache
 from crawler.loaders import Loader, Reloader, YoutubeDlLoader, Tab
@@ -22,6 +24,36 @@ class YoutubeCrawler:
         self.__cache = cache
         if self.__cache is None:
             self.__cache = DBSqlLiteCache()
+
+
+        # conn = sqlite3.connect(self.__cache.db_path)
+        #
+        # res = conn.execute("select * from channels WHERE channel_id = 'UCzAzPC4VWIMHqrnIM1iBPsQ'")
+        # res = res.fetchall()
+        #
+        # res = conn.execute("select * from videos where video_id = '77zRrFOuW0k'")
+        # res = res.fetchall()
+        #
+        # res = conn.execute("UPDATE channels SET downloaded = 0 WHERE channel_id = 'UCzAzPC4VWIMHqrnIM1iBPsQ'")
+        # res = res.fetchall()
+        #
+        # res = conn.execute("delete from videos where video_id = '77zRrFOuW0k'")
+        # res = res.fetchall()
+        #
+        # res = conn.execute("select * from channels where channel_id = 'UCzAzPC4VWIMHqrnIM1iBPsQ'")
+        # res = res.fetchall()
+        #
+        # res = conn.execute("select * from videos where video_id = '77zRrFOuW0k'")
+        # res = res.fetchall()
+        #
+        # conn.commit()
+        #
+        # res = conn.execute("select * from channels where channel_id = 'UCzAzPC4VWIMHqrnIM1iBPsQ'")
+        # res = res.fetchall()
+        #
+        # res = conn.execute("select * from videos where video_id = '77zRrFOuW0k'")
+        # res = res.fetchall()
+        # conn.close()
 
         self.__video_downloader = ydl_loader
         if self.__video_downloader is None:
@@ -160,6 +192,7 @@ class YoutubeCrawler:
             except Exception as e:
                 self.__set_failed_channel(channel_id)
                 self.logger.error(e)
+                channel_id = self.__cache.get_best_channel_id()
                 continue
 
             neighb_channels = None
@@ -173,12 +206,24 @@ class YoutubeCrawler:
                 self.logger.error(e)
 
             # Downloading youtube for ChannelId
-            self.__download_videos(full_descr)
+            try:
+                self.__download_videos(full_descr)
+            except Exception as e:
+                msg = "Problem with downloaded videos." + self.__crash_msg % ("ChannelId", channel_id)
+                e = utils.CrawlerError(e=e, msg=msg)
+                self.logger.error(e)
+                channel_id = self.__cache.get_best_channel_id()
+                continue
 
             # Channel was downloaded
-            channel_id, err = self.__cache.update_channel_downloaded(channel_id)
-            self.logger.error(err + self.__crash_msg % ("ChannelId", channel_id))
+            try:
+                self.__cache.update_channel_downloaded(channel_id)
+            except Exception as e:
+                msg = "Problem with update channelId" + self.__crash_msg % ("ChannelId", channel_id)
+                e = utils.CrawlerError(e=e, msg=msg)
+                self.logger.error(e)
+                channel_id = self.__cache.get_best_channel_id()
+                continue
 
             # Getting next channel from Cache
-            channel_id, err = self.__cache.get_best_channel_id()
-            self.logger.error(err + self.__crash_msg % ("ChannelIds", channel_id))
+            channel_id = self.__cache.get_best_channel_id()
