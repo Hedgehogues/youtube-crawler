@@ -82,8 +82,9 @@ class YoutubeCrawler:
         priority = 0
 
         new_full_descr = {}
-        for k in full_descr:
-            new_full_descr[k.value] = full_descr[k]
+        if full_descr is not None:
+            for k in full_descr:
+                new_full_descr[k.value] = full_descr[k]
 
         return [{
             'channel_id': channel_id,
@@ -94,9 +95,8 @@ class YoutubeCrawler:
 
     def __get_neighb_channels(self, descr):
         channels = []
-        for page in descr[Tab.Channels]:
-            for channel in page['channels']:
-                channels += self.__create_cur_channel(channel['id'], None, channel)
+        for channel in descr[Tab.Channels]:
+            channels += self.__create_cur_channel(channel['channel_id'], None, channel)
         return channels
 
     def __set_failed_channel(self, channel_id):
@@ -160,6 +160,7 @@ class YoutubeCrawler:
             except Exception as e:
                 self.__set_failed_channel(channel_id)
                 self.logger.error(e)
+                channel_id = self.__cache.get_best_channel_id()
                 continue
 
             neighb_channels = None
@@ -173,12 +174,24 @@ class YoutubeCrawler:
                 self.logger.error(e)
 
             # Downloading youtube for ChannelId
-            self.__download_videos(full_descr)
+            try:
+                self.__download_videos(full_descr)
+            except Exception as e:
+                msg = "Problem with downloaded videos." + self.__crash_msg % ("ChannelId", channel_id)
+                e = utils.CrawlerError(e=e, msg=msg)
+                self.logger.error(e)
+                channel_id = self.__cache.get_best_channel_id()
+                continue
 
             # Channel was downloaded
-            channel_id, err = self.__cache.update_channel_downloaded(channel_id)
-            self.logger.error(err + self.__crash_msg % ("ChannelId", channel_id))
+            try:
+                self.__cache.update_channel_downloaded(channel_id)
+            except Exception as e:
+                msg = "Problem with update channelId" + self.__crash_msg % ("ChannelId", channel_id)
+                e = utils.CrawlerError(e=e, msg=msg)
+                self.logger.error(e)
+                channel_id = self.__cache.get_best_channel_id()
+                continue
 
             # Getting next channel from Cache
-            channel_id, err = self.__cache.get_best_channel_id()
-            self.logger.error(err + self.__crash_msg % ("ChannelIds", channel_id))
+            channel_id = self.__cache.get_best_channel_id()

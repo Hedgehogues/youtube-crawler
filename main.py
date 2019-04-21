@@ -1,8 +1,6 @@
 from crawler.cache import DBSqlLiteCache, DB_MOD
 from crawler.crawler import YoutubeCrawler
-from crawler.loaders import Loader, Reloader, YoutubeDlLoader
-from crawler.scrapper import Scrapper
-from crawler import parsers
+from crawler.loaders import YoutubeDlLoader, YoutubeDlLoaderFormat
 
 
 def sep(x):
@@ -15,11 +13,15 @@ def sep(x):
 
 
 fd = open('data/base_channels.tsv')
-l = fd.readlines()
-channel_ids = list(filter(lambda x: len(x) > 0, map(sep, l)))
+channel_ids = list(filter(lambda x: len(x) > 0, map(sep, fd.readlines())))
+fd.close()
 
-x = YoutubeCrawler(cache=DBSqlLiteCache(db_mod=DB_MOD.OLD), max_attempts=1)
-x.process(channel_ids)
+crawler = YoutubeCrawler(
+    ydl_loader=YoutubeDlLoader(f=YoutubeDlLoaderFormat.MP3),
+    cache=DBSqlLiteCache(db_mod=DB_MOD.OLD),
+    max_attempts=5
+)
+crawler.process(channel_ids)
 
-print('Finish')
+print('###################### Finish ######################')
 
