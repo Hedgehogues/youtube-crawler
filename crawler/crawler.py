@@ -25,36 +25,6 @@ class YoutubeCrawler:
         if self.__cache is None:
             self.__cache = DBSqlLiteCache()
 
-
-        # conn = sqlite3.connect(self.__cache.db_path)
-        #
-        # res = conn.execute("select * from channels WHERE channel_id = 'UCzAzPC4VWIMHqrnIM1iBPsQ'")
-        # res = res.fetchall()
-        #
-        # res = conn.execute("select * from videos where video_id = '77zRrFOuW0k'")
-        # res = res.fetchall()
-        #
-        # res = conn.execute("UPDATE channels SET downloaded = 0 WHERE channel_id = 'UCzAzPC4VWIMHqrnIM1iBPsQ'")
-        # res = res.fetchall()
-        #
-        # res = conn.execute("delete from videos where video_id = '77zRrFOuW0k'")
-        # res = res.fetchall()
-        #
-        # res = conn.execute("select * from channels where channel_id = 'UCzAzPC4VWIMHqrnIM1iBPsQ'")
-        # res = res.fetchall()
-        #
-        # res = conn.execute("select * from videos where video_id = '77zRrFOuW0k'")
-        # res = res.fetchall()
-        #
-        # conn.commit()
-        #
-        # res = conn.execute("select * from channels where channel_id = 'UCzAzPC4VWIMHqrnIM1iBPsQ'")
-        # res = res.fetchall()
-        #
-        # res = conn.execute("select * from videos where video_id = '77zRrFOuW0k'")
-        # res = res.fetchall()
-        # conn.close()
-
         self.__video_downloader = ydl_loader
         if self.__video_downloader is None:
             self.__video_downloader = YoutubeDlLoader()
