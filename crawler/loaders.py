@@ -123,7 +123,7 @@ class YoutubeDlLoader:
             url = self._base_url + '?v=%s' % video_id
             descr = self._video_descr_extractor.extract(url)
             if 'ru' not in descr['automatic_captions']:
-                return None
+                return {}
 
             self._audio_ydl.download([url])
             return descr

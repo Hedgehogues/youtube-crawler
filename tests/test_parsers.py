@@ -45,7 +45,7 @@ class TestReloaderParser(BaseTestClass):
                 name="Test 1",
                 description="Invalid data_config. Problem with itct field",
                 args={
-                    'data_config': {
+                    'config': {
                         mockTab.value: []
                     },
                     'is_reload': False
@@ -62,7 +62,7 @@ class TestReloaderParser(BaseTestClass):
                 name="Test 2",
                 description="Invalid data_config. Problem with ctoken field",
                 args={
-                    'data_config': {
+                    'config': {
                         mockTab.value: []
                     },
                     'is_reload': False
@@ -79,7 +79,7 @@ class TestReloaderParser(BaseTestClass):
                 name="Test 3",
                 description="Valid data config.",
                 args={
-                    'data_config': {
+                    'config': {
                         'next_page_token': {'itct': 'token', 'ctoken': 'token'},
                         mockTab.value: []
                     },
@@ -97,7 +97,7 @@ class TestReloaderParser(BaseTestClass):
                 name="Test 4",
                 description="Valid data config. There is not ctoken",
                 args={
-                    'data_config': {
+                    'config': {
                         'next_page_token': {'itct': 'token', 'ctoken': None},
                         mockTab.value: []
                     },
@@ -115,7 +115,7 @@ class TestReloaderParser(BaseTestClass):
                 name="Test 5",
                 description="Valid data config. There is not itct",
                 args={
-                    'data_config': {
+                    'config': {
                         'next_page_token': {'itct': None, 'ctoken': 'token'},
                         mockTab.value: []
                     },
@@ -133,7 +133,7 @@ class TestReloaderParser(BaseTestClass):
                 name="Test 6",
                 description="Reload",
                 args={
-                    'data_config': {
+                    'config': {
                         'next_page_token': {'itct': None, 'ctoken': 'token'},
                         mockTab.value: []
                     },
@@ -174,7 +174,7 @@ class TestReloaderParser(BaseTestClass):
             jq_reload_path=self.__jq_reload_path,
         )
         parse_kwargs = {
-            'data_config': {
+            'config': {
                 'next_page_token': {'itct': None, 'ctoken': 'token'},
                 mockTab.value: [self.__jq_load_path]
             },
