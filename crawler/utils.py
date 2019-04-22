@@ -13,20 +13,15 @@ class CrawlerError(Exception):
         self.msg += other
 
     def __str__(self):
-        return self.get_stack_errors()
+        return self.__recursion(self)
 
     def __recursion(self, e):
-        if type(e) is CrawlerError:
+        if isinstance(e, CrawlerError):
             msg = self.__recursion(e.e)
             return "%s" % self.msg if len(msg) == 0 else "%s:%s -> %s" % (type(e), e.msg, msg)
         if e is None:
             return ""
         return "%s:%s" % (type(e), e.__str__())
-
-    def get_stack_errors(self):
-        if type(self.e) is CrawlerError:
-            return "Stack trace: %s:%s -> %s" % (type(self), self.msg, self.__recursion(self.e))
-        return "%s:%s" % (type(self), self.e.__str__())
 
 
 class DownloadError(CrawlerError):
