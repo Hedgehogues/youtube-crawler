@@ -13,20 +13,15 @@ class CrawlerError(Exception):
         self.msg += other
 
     def __str__(self):
-        return self.get_stack_errors()
+        return self.__recursion(self)
 
     def __recursion(self, e):
-        if type(e) is CrawlerError:
+        if isinstance(e, CrawlerError):
             msg = self.__recursion(e.e)
             return "%s" % self.msg if len(msg) == 0 else "%s:%s -> %s" % (type(e), e.msg, msg)
         if e is None:
             return ""
         return "%s:%s" % (type(e), e.__str__())
-
-    def get_stack_errors(self):
-        if type(self.e) is CrawlerError:
-            return "Stack trace: %s:%s -> %s" % (type(self), self.msg, self.__recursion(self.e))
-        return "%s:%s" % (type(self), self.e.__str__())
 
 
 class DownloadError(CrawlerError):
@@ -88,7 +83,7 @@ class ScrapperError(CrawlerError):
     after raised exception of Scrapper. Returned answer from Scrapper is invalid.
     """
     def __init__(self, channel_id, e=None):
-        super().__init__("Scrapper was failed. ChannelId: %s" % channel_id, e)
+        super().__init__("scrapper was failed. channel_id: %s" % channel_id, e)
 
 
 class CacheError(CrawlerError):
@@ -96,10 +91,10 @@ class CacheError(CrawlerError):
     """
     def __init__(self, video_id=None, channel_id=None, msg="", e=None):
         if video_id is not None and len(video_id) != 0:
-            msg += ". Video_id: %s" % video_id
+            msg += ". video_id: %s" % video_id
         if channel_id is not None and len(channel_id) != 0:
-            msg += ". Channel_id: %s" % channel_id
-        super().__init__("Problem with cache. %s" % msg, e)
+            msg += ". channel_id: %s" % channel_id
+        super().__init__("problem with cache. %s" % msg, e)
 
 
 class ExtensionError(CrawlerError):
@@ -107,9 +102,9 @@ class ExtensionError(CrawlerError):
     """
     def __init__(self, ext, msg="", e=None):
         msg = 'Message: "%s".' % msg if len(msg) > 0 else ""
-        super().__init__("Extension problem. %s Extension: %s" % (msg, ext), e)
+        super().__init__("extension problem. %s extension: %s" % (msg, ext), e)
 
 
 def check_resp(resp):
     if resp.status_code != 200:
-        raise RequestError("Status code exception: %d. Url: %s" % (resp.status_code, resp.url))
+        raise RequestError("status code exception: %d. url: %s" % (resp.status_code, resp.url))

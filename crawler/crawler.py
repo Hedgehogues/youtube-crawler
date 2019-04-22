@@ -13,11 +13,14 @@ class YoutubeCrawler:
 
     def __init__(self, logger=None, cache=None, ydl_loader=None, scraper=None, max_attempts=5):
         # TODO: переписать на StateMachine
+        # TODO: выводить инфу о способе запуска
+        # TODO: сделать options для конфигурирования
+        # TODO: как быть, если в scrapper передан один логгер, а в качестве аргумента в YoutubeCrawler -- другой?
         self.__max_attempts = max_attempts
 
-        self.logger = logger
-        if self.logger is None:
-            self.logger = SimpleLogger()
+        self.__logger = logger
+        if self.__logger is None:
+            self.__logger = SimpleLogger()
 
         self.__cache = cache
         if self.__cache is None:
@@ -31,7 +34,7 @@ class YoutubeCrawler:
         if self.__scraper is None:
             self.__init_none_scraper()
 
-        self.__crash_msg = "Channel from Cache isn't got. %s: [%s]. Crawler interrupts execute..."
+        self.__crash_msg = "channel from cache isn't got (%s=%s). crawler interrupts execute..."
 
     def __init_none_scraper(self):
         loader = Loader()
@@ -44,7 +47,7 @@ class YoutubeCrawler:
                 parsers.ChannelsParser(max_page=3),
                 parsers.AboutParser(),
             ],
-            logger=self.logger
+            logger=self.__logger
         )
         self.__scraper = scrapper
 
@@ -55,7 +58,7 @@ class YoutubeCrawler:
             try:
                 return fn(*args, **kwargs)
             except Exception as e:
-                self.logger.warn(utils.CrawlerError(e=e, msg="problem into scrapper. retry: %d" % count))
+                self.__logger.warn(utils.CrawlerError(e=e, msg="problem into scrapper. retry: %d" % count))
                 count += 1
         raise e
 
@@ -103,7 +106,7 @@ class YoutubeCrawler:
         try:
             self.__cache.update_failed_channel(channel_id)
         except Exception as e:
-            self.logger.alert(e)
+            self.__logger.alert(e)
 
     def __download_videos(self, descrs):
         channel_id = descrs[Tab.HomePage][0]['owner_channel']['id']
@@ -112,7 +115,7 @@ class YoutubeCrawler:
 
             # Check in Cache video_id
             if self.__cache.check_exist_video(video_id):
-                self.logger.info("Such video already exist. VideoId: %s" % video_id)
+                self.__logger.info("such video already exist (video_id=%s)" % video_id)
                 continue
 
             # Download video
@@ -120,76 +123,88 @@ class YoutubeCrawler:
                 full_video_descr = self.scrappy_decorator(self.__video_downloader.load, video_id)
             except Exception as e:
                 self.__cache.update_failed_video(video_id)
-                self.logger.warn(e)
+                msg = "problem with video downloading (video_id=%s)" % video_id
+                self.__logger.warn(utils.CrawlerError(e=e, msg=msg))
                 continue
 
             data = self.__create_video(video_id, channel_id, full_video_descr, descr)
             try:
                 self.__cache.insert_video_descr(data)
             except Exception as e:
-                self.logger.alert(e)
+                msg = "problem with video inserting into db (video_id=%s)" % video_id
+                self.__logger.warn(utils.CrawlerError(e=e, msg=msg))
+                self.__logger.error(e)
+
+    def __set_base_videos(self, channel_ids):
+        msg = None
+        try:
+            ch_ids_str = ','.join(channel_ids)
+            msg = "set base channels was failed (channel_ids=%s)" % ch_ids_str
+            self.__cache.set_base_channels(channel_ids)
+        except Exception as e:
+            self.__logger.alert(utils.CrawlerError(e=e, msg=msg))
+            # raise exception
+
+    def __scrappy(self, channel_id):
+        self.__logger.info("scrappy channelId=%s" % channel_id)
+        try:
+            full_descr = self.scrappy_decorator(self.__scraper.parse, channel_id)
+            # Extract full_descr
+            channel = self.__create_cur_channel(channel_id, full_descr, None)
+            # Setting current channel into Cache. ChannelId
+            self.__cache.set_channels(channel, scrapped=True, valid=True)
+        except Exception as e:
+            self.__set_failed_channel(channel_id)
+            self.__logger.error(e)
+            return None, False
+        return full_descr, True
+
+    def __set_neighb_channels(self, full_descr):
+        neighb_channels = None
+        try:
+            # Setting neighbours channels into Cache. ChannelId
+            neighb_channels = self.__get_neighb_channels(full_descr)
+            self.__cache.set_channels(neighb_channels, scrapped=False, valid=True)
+        except Exception as e:
+            ch_ids_str = ','.join([ch['id'] for ch in neighb_channels])
+            e = utils.CrawlerError(e=e, msg=self.__crash_msg % ("channel_ids", ch_ids_str))
+            self.__logger.error(e)
+
+    def __update_channel_downloaded(self, channel_id):
+        try:
+            self.__cache.update_channel_downloaded(channel_id)
+        except Exception as e:
+            msg = "problem with update channel_id. " + self.__crash_msg % ("channel_id", channel_id)
+            e = utils.CrawlerError(e=e, msg=msg)
+            self.__logger.error(e)
+            return False
+        return True
 
     def process(self, channel_ids=None):
         if channel_ids is None:
             channel_ids = []
-        if type(channel_ids) is not list:
+        if not isinstance(channel_ids, list):
             raise utils.CrawlerError("channel_ids is not list")
-        self.logger.info("Setting channel ids from arguments into Cache")
+        self.__logger.info("setting channel ids from arguments into cache")
 
-        msg = None
-        channel_id = None
-        try:
-            ch_ids_str = ','.join(channel_ids)
-            msg = "Set base channels was failed. ChannelIds: %s" % ch_ids_str
-            self.__cache.set_base_channels(channel_ids)
-            # Getting first channel from Cache
-            msg = "Problem with extracting Base channel"
-            channel_id = self.__cache.get_best_channel_id()
-        except Exception as e:
-            self.logger.alert(utils.CrawlerError(e=e, msg=msg))
-            # raise exception
+        self.__set_base_videos(channel_ids)
+        # Getting first channel from Cache
+        channel_id = self.__cache.get_best_channel_id()
 
         while channel_id is not None:
-            self.logger.info("Scrappy channelId: %s" % channel_id)
-            try:
-                full_descr = self.scrappy_decorator(self.__scraper.parse, channel_id)
-                # Extract full_descr
-                channel = self.__create_cur_channel(channel_id, full_descr, None)
-                # Setting current channel into Cache. ChannelId
-                self.__cache.set_channels(channel, scrapped=True, valid=True)
-            except Exception as e:
-                self.__set_failed_channel(channel_id)
-                self.logger.error(e)
+            full_descr, is_scrappy = self.__scrappy(channel_id)
+            if not is_scrappy:
                 channel_id = self.__cache.get_best_channel_id()
                 continue
 
-            neighb_channels = None
-            try:
-                # Setting neighbours channels into Cache. ChannelId
-                neighb_channels = self.__get_neighb_channels(full_descr)
-                self.__cache.set_channels(neighb_channels, scrapped=False, valid=True)
-            except Exception as e:
-                ch_ids_str = ','.join([ch['id'] for ch in neighb_channels])
-                e = utils.CrawlerError(e=e, msg=self.__crash_msg % ("ChannelIds", ch_ids_str))
-                self.logger.error(e)
+            self.__set_neighb_channels(full_descr)
 
             # Downloading youtube for ChannelId
-            try:
-                self.__download_videos(full_descr)
-            except Exception as e:
-                msg = "Problem with downloaded videos." + self.__crash_msg % ("ChannelId", channel_id)
-                e = utils.CrawlerError(e=e, msg=msg)
-                self.logger.error(e)
-                channel_id = self.__cache.get_best_channel_id()
-                continue
+            # TODO: move to scrapper
+            self.__download_videos(full_descr)
 
             # Channel was downloaded
-            try:
-                self.__cache.update_channel_downloaded(channel_id)
-            except Exception as e:
-                msg = "Problem with update channelId" + self.__crash_msg % ("ChannelId", channel_id)
-                e = utils.CrawlerError(e=e, msg=msg)
-                self.logger.error(e)
+            if not self.__update_channel_downloaded(channel_id):
                 channel_id = self.__cache.get_best_channel_id()
                 continue
 
