@@ -26,8 +26,8 @@ scrapper = Scrapper(
     loader=loader, reloader=reloader,
     parsers=[
         parsers.HomePageParser(),
-        parsers.VideosParser(max_page=1),
-        parsers.ChannelsParser(max_page=1),
+        parsers.VideosParser(),
+        parsers.ChannelsParser(),
         parsers.AboutParser(),
     ],
     logger=logger,
@@ -35,7 +35,7 @@ scrapper = Scrapper(
 
 crawler = YoutubeCrawler(
     ydl_loader=YoutubeDlLoader(f=YoutubeDlLoaderFormat.MP3),
-    cache=DBSqlLiteCache(db_mod=DB_MOD.HARD),
+    cache=DBSqlLiteCache(db_mod=DB_MOD.NEW),
     scraper=scrapper,
     max_attempts=5
 )
