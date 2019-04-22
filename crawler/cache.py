@@ -198,10 +198,10 @@ class DBSqlLiteCache:
             self.logger = SimpleLogger()
 
         if db_mod == DB_MOD.NEW and os.path.exists(path):
-            msg = "Data base has already exist. Set DB_MODE == HARD or DB_MODE == OLD. Path: %s"
+            msg = "data base has already exist. set DB_MODE == HARD or DB_MODE == OLD. path: %s"
             raise FileExistsError(msg % os.path.abspath(path))
         if db_mod == DB_MOD.OLD and not os.path.exists(path):
-            msg = "Data base has not already exist. Set DB_MODE == HARD or DB_MODE == NEW. Path: %s"
+            msg = "data base has not already exist. set DB_MODE == HARD or DB_MODE == NEW. path: %s"
             raise FileExistsError(msg % os.path.abspath(path))
         self.db_path = path
         conn = sqlite3.connect(self.db_path)
@@ -217,8 +217,7 @@ class DBSqlLiteCache:
                 output_channels.append(channel)
                 s.add(channel['channel_id'])
                 continue
-            # TODO: не выводится ошибка. Пофиксить
-            msg = "This channel already exists into input channels"
+            msg = "this channel already exists into input channels"
             warn = utils.CacheError(channel_id=channel['channel_id'], msg=msg)
             self.logger.warn(warn)
         return output_channels
@@ -367,7 +366,7 @@ class DBSqlLiteCache:
         """
         conn = sqlite3.connect(self.db_path)
         if not self.__check_exist_channel_id(conn, channel_id):
-            raise utils.CacheError(channel_id=channel_id, msg="Not found channel in DB")
+            raise utils.CacheError(channel_id=channel_id, msg="not found channel in DB")
         conn.execute(self.__sql_update_failed_channel, (False, channel_id))
         conn.commit()
         conn.close()
@@ -383,7 +382,7 @@ class DBSqlLiteCache:
         """
         conn = sqlite3.connect(self.db_path)
         if not self.__check_exist_channel_id(conn, channel_id):
-            raise utils.CacheError(channel_id=channel_id, msg="Not found channel in DB")
+            raise utils.CacheError(channel_id=channel_id, msg="not found channel in DB")
         conn.execute(self.__sql_update_downloaded_channel, (True, channel_id))
         conn.commit()
         conn.close()
@@ -403,5 +402,5 @@ class DBSqlLiteCache:
         res = conn.execute(self.__sql_get_best_channel).fetchone()
         conn.close()
         if res is None or len(res) == 0:
-            raise utils.CacheError(msg="There are not any channels")
+            raise utils.CacheError(msg="there are not any channels")
         return res[0]

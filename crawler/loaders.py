@@ -133,4 +133,4 @@ class YoutubeDlLoader:
             self._audio_ydl.download([url])
             return descr
         except Exception as e:
-            raise utils.DownloadError(msg="Downloading was failed. VideoId: %s" % video_id, e=e)
+            raise utils.DownloadError(msg="downloading was failed (video_id=%s)" % video_id, e=e)

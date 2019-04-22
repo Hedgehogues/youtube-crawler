@@ -32,7 +32,7 @@ class BaseParser:
         :exception ReloadTokenError: if this method executes with param is_reload==True, then this exception is executed
         """
         if is_reload:
-            raise ReloadTokenError("This parser not implement reload options. Token cannot be received")
+            raise ReloadTokenError("this parser not implement reload options. token cannot be received")
         data = self._jq_load.transform(config)
         return [data], None
 
@@ -78,7 +78,7 @@ class ReloaderParser(BaseParser):
             itct = data['next_page_token']['itct']
             next_page_token = data['next_page_token']['ctoken']
         except Exception as e:
-            raise utils.ParserError("Next page token is not available", e)
+            raise utils.ParserError("next page token is not available", e)
         if next_page_token is not None and itct is not None:
             return data[self.tab.value], {
                 'ctoken': next_page_token,
