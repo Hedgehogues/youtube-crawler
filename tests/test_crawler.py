@@ -1,7 +1,9 @@
+import logging
+
 from crawler import utils
 from crawler.crawler import YoutubeCrawler
 from crawler.utils import CrawlerError
-from tests import MockLogger, full_descr_mock
+from tests import full_descr_mock
 from tests.utils import BaseTestClass, SubTest
 
 
@@ -50,12 +52,12 @@ class TestScrapper(BaseTestClass):
             ),
             scraper=ScrapperMock(),
             ydl_loader=DownloaderMock(),
-            logger=MockLogger(),
             max_attempts=max_attempts,
         )
         return crawler
 
     def setUp(self):
+        logging.getLogger().setLevel(logging.CRITICAL)
         self.tests = [
             SubTest(
                 name="Test 1",

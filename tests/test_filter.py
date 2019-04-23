@@ -1,3 +1,5 @@
+import logging
+
 from crawler.filter import Filter, ChannelLanguage
 from crawler.loaders import Tab
 from tests.utils import BaseTestClass, SubTest
@@ -10,6 +12,7 @@ class TestScrapper(BaseTestClass):
     """
 
     def setUp(self):
+        logging.getLogger().setLevel(logging.CRITICAL)
         self.tests = [
             SubTest(
                 name="Test 1",

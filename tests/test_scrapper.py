@@ -1,7 +1,8 @@
+import logging
 from collections import Counter
 
 from crawler.scrapper import Scrapper
-from tests import MockLogger, MockTab
+from tests import MockTab
 from tests.utils import BaseTestClass, SubTest
 
 
@@ -71,13 +72,13 @@ class TestScrapper(BaseTestClass):
             loader=MockLoader(client),
             reloader=MockReloader(client),
             parsers=[MockParser(tab=tab, max_pages=max_pages[tab]) for tab in max_pages],
-            logger=MockLogger()
         )
         for k in max_pages:
             scrapper.query_params[k] = k
         return scrapper
 
     def setUp(self):
+        logging.getLogger().setLevel(logging.CRITICAL)
         channel_id = "test_channel"
 
         self.tests = [

@@ -1,3 +1,5 @@
+import logging
+
 from crawler import utils
 from tests import MockTab
 from tests.utils import BaseTestClass, SubTest
@@ -38,6 +40,7 @@ class TestReloaderParser(BaseTestClass):
     __jq_reload_path = 'reload'
 
     def setUp(self):
+        logging.getLogger().setLevel(logging.CRITICAL)
         parsers.open = MockOpen
         parsers.jq = MockJq
         self.tests_parse = [

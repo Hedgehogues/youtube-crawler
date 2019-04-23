@@ -1,3 +1,4 @@
+import logging
 import os
 
 from crawler import utils
@@ -35,6 +36,7 @@ class TestVTTtoSRT(BaseTestClass):
         os.remove('%s/%s' % (path, prefix + filename + ext))
 
     def setUp(self):
+        logging.getLogger().setLevel(logging.CRITICAL)
         self.tests = [
             SubTest(
                 name="Test 1",
