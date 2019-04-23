@@ -54,7 +54,18 @@ def parse():
         type=int,
         help='max attempts retry for requests',
     )
-
-    args.add_argument('--log-level', choices=['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'], default='INFO')
+    args.add_argument(
+        '--log-level',
+        default='INFO',
+        choices=['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'],
+        type=str,
+        help='level of logging',
+    )
+    args.add_argument(
+        '--logging-filename',
+        default=None,
+        type=str,
+        help='path to file for logging',
+    )
 
     return vars(args.parse_args())
