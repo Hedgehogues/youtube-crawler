@@ -118,7 +118,7 @@ class YoutubeDlLoader:
                 'format': 'bestaudio/best',
                 'prefer-avconv': True,
                 'subtitleslangs': ['ru'],
-                'ext': 'wav',
+                'ext': f.value,
                 'simulate': False,
                 'max_sleep_interval': 2,
                 'sleep_interval': 1,
