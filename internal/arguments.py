@@ -14,7 +14,7 @@ def parse():
         '--base-channels',
         default=getenv('BASE_CHANNELS', 'data/base_channels.tsv'),
         type=str,
-        help='base channels for start crawling',
+        help='path to file with base channels for start crawling (one url to channel per line)',
     )
     args.add_argument(
         '--max-videos-page',
