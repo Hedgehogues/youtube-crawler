@@ -11,10 +11,10 @@
 
 ### Installation and running
 
-git clone https://github.com/Hedgehogues/youtube-crawler
-cd youtube-crawler
-pip install -r requirements.txt
-python main --logging-filename=./log
+    git clone https://github.com/Hedgehogues/youtube-crawler
+    cd youtube-crawler
+    pip install -r requirements.txt
+    python main --logging-filename=./log
 
 ### Description of application:
 
