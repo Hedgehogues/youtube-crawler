@@ -1,4 +1,5 @@
 import json
+import logging
 import unittest
 from collections import namedtuple
 
@@ -27,6 +28,7 @@ class MockRequests:
 
 class TestLoaderBaseClass(unittest.TestCase):
     def setUp(self):
+        logging.getLogger().setLevel(logging.CRITICAL)
         user_agent = \
             "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36"
         cache_control = 'no-cache'

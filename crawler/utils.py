@@ -24,12 +24,6 @@ class CrawlerError(Exception):
         return "%s:%s" % (type(e), e.__str__())
 
 
-class DownloadError(CrawlerError):
-    """ Downloading was failed """
-    def __init__(self, msg, e=None):
-        super().__init__(msg, e)
-
-
 class ReloadTokenError(CrawlerError):
     """ Token was not found or invalid
 

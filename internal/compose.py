@@ -1,0 +1,56 @@
+import logging
+
+from crawler import parsers
+from crawler.cache import DBSqlLiteCache, DB_MOD
+from crawler.crawler import YoutubeCrawler
+from crawler.loaders import YoutubeDlLoader, YDL_LOADER_FORMAT, Loader, Reloader
+from crawler.scrapper import Scrapper
+
+
+def sep_url(x):
+    return x.replace('\n', '').split('/')[-1]
+
+
+def build_crawler(**kwargs):
+    """
+
+    :param kwargs:
+    :return:
+    """
+
+    logger = logging.getLogger()
+    logger.setLevel(kwargs.pop('log_level', logging.INFO))
+    scrapper = Scrapper(
+        loader=Loader(base_url=kwargs.pop('loader_base_url', 'https://www.youtube.com/channel/')),
+        reloader=Reloader(base_url=kwargs.pop('reloader_base_url', 'https://www.youtube.com/browse_ajax/')),
+        parsers=[
+            parsers.HomePageParser(jq_path=kwargs.pop('homepage_parser_jq_path', 'crawler/jq/home_page.jq')),
+            parsers.VideosParser(
+                max_page=kwargs.pop('max_videos_page', None),
+                jq_load_path=kwargs.pop('video_jq_load_path', 'crawler/jq/videos.jq'),
+                jq_reload_path=kwargs.pop('video_jq_reload_path', 'crawler/jq/videos_reload.jq'),
+            ),
+            parsers.ChannelsParser(
+                max_page=kwargs.pop('max_channels_page', None),
+                jq_load_path=kwargs.pop('channels_jq_load_path', 'crawler/jq/channels.jq'),
+                jq_reload_path=kwargs.pop('channels_jq_reload_path', 'crawler/jq/channels_reload.jq'),
+            ),
+            parsers.AboutParser(jq_path=kwargs.pop('homepage_jq_path', 'crawler/jq/about.jq')),
+        ],
+    )
+
+    crwl = YoutubeCrawler(
+        ydl_loader=YoutubeDlLoader(
+            ydl_params=kwargs.pop("ydl_params", None),
+            f=kwargs.pop("ydl_format", YDL_LOADER_FORMAT.MP3),
+            base_url=kwargs.pop("ydl_url", 'https://www.youtube.com/watch'),
+            logger=logger,
+        ),
+        cache=DBSqlLiteCache(
+            path=kwargs.pop("sqlite_path", 'data/db.sqlite'),
+            db_mod=kwargs.pop("db_mod", DB_MOD.NEW),
+        ),
+        scraper=scrapper,
+        max_attempts=kwargs.pop("max_attempts", 5),
+    )
+    return crwl

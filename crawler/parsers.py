@@ -88,7 +88,8 @@ class ReloaderParser(BaseParser):
 
 
 class VideosParser(ReloaderParser):
-    def __init__(self, max_page=None, jq_load_path='crawler/jq/videos.jq', jq_reload_path='crawler/jq/videos_reload.jq'):
+    def __init__(
+            self, max_page=None, jq_load_path='crawler/jq/videos.jq', jq_reload_path='crawler/jq/videos_reload.jq'):
         """
         This parser loads the pages with videos
 
@@ -102,7 +103,8 @@ class VideosParser(ReloaderParser):
 
 
 class ChannelsParser(ReloaderParser):
-    def __init__(self, max_page=None, jq_load_path='crawler/jq/channels.jq', jq_reload_path='crawler/jq/channels_reload.jq'):
+    def __init__(
+            self, max_page=None, jq_load_path='crawler/jq/channels.jq', jq_reload_path='crawler/jq/channels_reload.jq'):
         """
         This parser loads the pages with channels
 

@@ -1,4 +1,5 @@
 import json
+
 import requests
 from copy import deepcopy
 from enum import Enum
@@ -42,9 +43,9 @@ class BaseLoader:
 
 
 class Reloader(BaseLoader):
-    def __init__(self):
+    def __init__(self, base_url='https://www.youtube.com/browse_ajax/'):
         super().__init__()
-        self._base_url = 'https://www.youtube.com/browse_ajax/'
+        self._base_url = base_url
 
     def load(self, next_page_token):
         if len(next_page_token['ctoken']) == 0:
@@ -66,17 +67,20 @@ class Reloader(BaseLoader):
 
 
 class Loader(BaseLoader):
-    def __init__(self):
+    def __init__(
+            self, data_config_prefix='window["ytInitialData"] = ',
+            player_config_prefix='window["ytInitialPlayerResponse"] = (\n        ',
+            base_url='https://www.youtube.com/channel/'):
         super().__init__()
-        self._base_url = 'https://www.youtube.com/channel/'
-        self.data_config = 'window["ytInitialData"] = '
-        self.player_config = 'window["ytInitialPlayerResponse"] = (\n        '
+        self._base_url = base_url
+        self._data_config_prefix = data_config_prefix
+        self._player_config_prefix = player_config_prefix
 
     def load(self, channel_id, tab=Tab.HomePage, query_params=None):
         text = self._get_resp_text(self._base_url + channel_id + '/' + tab.value, params=query_params)
 
-        data_config = self.__extractor(text, self.data_config, "Data config serialize is failed", ';\n')
-        player_config = self.__extractor(text, self.player_config, "Player config serialize is failed", ');\n')
+        data_config = self.__extractor(text, self._data_config_prefix, "Data config serialize is failed", ';\n')
+        player_config = self.__extractor(text, self._player_config_prefix, "Player config serialize is failed", ');\n')
 
         return player_config, data_config
 
@@ -91,16 +95,19 @@ class Loader(BaseLoader):
             raise utils.JsonSerializableError(msg, e)
 
 
-class YoutubeDlLoaderFormat(Enum):
+class YDL_LOADER_FORMAT(Enum):
     MP3 = 'mp3'
     WAV = 'wav'
 
+    def __str__(self):
+        return self.value
+
 
 class YoutubeDlLoader:
-    def __init__(self, ydl_params=None, f=YoutubeDlLoaderFormat.MP3):
-        self._base_url = 'https://www.youtube.com/watch'
+    def __init__(self, logger, ydl_params=None, f=YDL_LOADER_FORMAT.MP3, base_url='https://www.youtube.com/watch'):
+        self._base_url = base_url
 
-        ydl = youtube_dl.YoutubeDL({'listsubtitles': True})
+        ydl = youtube_dl.YoutubeDL({'listsubtitles': True, 'logger': logger})
         self._video_descr_extractor = ydl.get_info_extractor(youtube_dl.gen_extractors()[1125].ie_key())
 
         audio_ydl_params = ydl_params
@@ -111,12 +118,13 @@ class YoutubeDlLoader:
                 'format': 'bestaudio/best',
                 'prefer-avconv': True,
                 'subtitleslangs': ['ru'],
-                'ext': 'wav',
+                'ext': f.value,
                 'simulate': False,
                 'max_sleep_interval': 2,
                 'sleep_interval': 1,
                 'ignoreerrors': False,
             }
+        audio_ydl_params['logger'] = logger
         self._audio_ydl = youtube_dl.YoutubeDL(audio_ydl_params)
 
     def load(self, video_id):
@@ -124,13 +132,10 @@ class YoutubeDlLoader:
         # TODO: логгировать все статусы обкачки для того, чтобы можно было возобновить обкачку с прежнего места
         # TODO: заменить на кастомные обкачки, так как youtube-dl использует 2 обращения (за субтитрами и за видео)
 
-        try:
-            url = self._base_url + '?v=%s' % video_id
-            descr = self._video_descr_extractor.extract(url)
-            if 'ru' not in descr['automatic_captions']:
-                return {}
+        url = self._base_url + '?v=%s' % video_id
+        descr = self._video_descr_extractor.extract(url)
+        if 'ru' not in descr['automatic_captions']:
+            return {}
 
-            self._audio_ydl.download([url])
-            return descr
-        except Exception as e:
-            raise utils.DownloadError(msg="downloading was failed (video_id=%s)" % video_id, e=e)
+        self._audio_ydl.download([url])
+        return descr

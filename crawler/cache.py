@@ -1,9 +1,9 @@
+import logging
 import os
 import sqlite3
 from enum import Enum
 
 from crawler import utils
-from crawler.simple_logger import SimpleLogger
 
 
 class DB_MOD(Enum):
@@ -14,9 +14,12 @@ class DB_MOD(Enum):
     :cvar OLD: this mod uses old database or generate exception
     :cvar OLD: this mod uses new database or generate exception
     """
-    HARD = 0
-    OLD = 1
-    NEW = 2
+    HARD = "hard"
+    OLD = "old"
+    NEW = "new"
+
+    def __str__(self):
+        return self.value
 
 
 def create_args_set_update_base_channels(channel_id):
@@ -189,13 +192,9 @@ class DBSqlLiteCache:
         conn.execute(self.__sql_query_create_videos)
         conn.commit()
 
-    def __init__(self, path='data/db.sqlite', db_mod=DB_MOD.NEW, logger=None):
+    def __init__(self, path='data/db.sqlite', db_mod=DB_MOD.NEW):
         if db_mod == DB_MOD.HARD and os.path.exists(path):
             os.remove(path)
-
-        self.logger = logger
-        if self.logger is None:
-            self.logger = SimpleLogger()
 
         if db_mod == DB_MOD.NEW and os.path.exists(path):
             msg = "data base has already exist. set DB_MODE == HARD or DB_MODE == OLD. path: %s"
@@ -219,7 +218,7 @@ class DBSqlLiteCache:
                 continue
             msg = "this channel already exists into input channels"
             warn = utils.CacheError(channel_id=channel['channel_id'], msg=msg)
-            self.logger.warn(warn)
+            logging.warning(warn)
         return output_channels
 
     def update_failed_video(self, video_id):

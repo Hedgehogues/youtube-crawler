@@ -4,3 +4,4 @@ data/channels/
 *.sqlite
 *.pyc
 data/videos/
+log

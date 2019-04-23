@@ -1,45 +1,25 @@
-from crawler import parsers
-from crawler.cache import DBSqlLiteCache, DB_MOD
-from crawler.crawler import YoutubeCrawler
-from crawler.loaders import YoutubeDlLoader, YoutubeDlLoaderFormat, Loader, Reloader
-from crawler.scrapper import Scrapper
-from crawler.simple_logger import SimpleLogger
+import logging
+
+from internal import arguments
+from internal import compose
+
+# TODO: Внутри crawler сделать нормальные декораторы
+# TODO: из первого канала скачалось только 50 видео. А где остальные? Скорее всего они не скачались, т.к. у них нет субтитров
 
 
-def sep(x):
-    if len(x) < 2:
-        return ''
-    z = x.replace('\n', '').split('/')
-    if len(z[-1]) == 0:
-        return z[-2]
-    return z[-1]
+def main():
+    args = arguments.parse()
+    crawler = compose.build_crawler(**args)
+    logging.basicConfig(
+        format='%(asctime)-15s %(levelname)s [%(name)s]: %(message)s',
+        filename=args['logging_filename']
+    )
+
+    with open(args['base_channels']) as fd:
+        channel_ids = list(filter(lambda x: len(x) > 0, map(compose.sep_url, fd.readlines())))
+
+    crawler.process(channel_ids)
 
 
-fd = open('data/base_channels.tsv')
-channel_ids = list(filter(lambda x: len(x) > 0, map(sep, fd.readlines())))
-fd.close()
-
-loader = Loader()
-reloader = Reloader()
-logger = SimpleLogger()
-scrapper = Scrapper(
-    loader=loader, reloader=reloader,
-    parsers=[
-        parsers.HomePageParser(),
-        parsers.VideosParser(),
-        parsers.ChannelsParser(),
-        parsers.AboutParser(),
-    ],
-    logger=logger,
-)
-
-crawler = YoutubeCrawler(
-    ydl_loader=YoutubeDlLoader(f=YoutubeDlLoaderFormat.MP3),
-    cache=DBSqlLiteCache(db_mod=DB_MOD.NEW),
-    scraper=scrapper,
-    max_attempts=5
-)
-crawler.process(channel_ids)
-
-print('###################### Finish ######################')
-
+if __name__ == '__main__':
+    main()
