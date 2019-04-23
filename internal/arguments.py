@@ -1,5 +1,4 @@
 import argparse
-import logging
 from os import getenv
 
 from crawler.cache import DB_MOD
@@ -56,7 +55,7 @@ def parse():
     )
     args.add_argument(
         '--log-level',
-        default='INFO',
+        default=getenv('LOG_LEVEL', 'INFO'),
         choices=['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'],
         type=str,
         help='level of logging',
