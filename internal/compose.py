@@ -1,4 +1,5 @@
 import logging
+import os
 
 from crawler import parsers
 from crawler.cache import DBSqlLiteCache, DB_MOD
@@ -18,7 +19,14 @@ def build_crawler(**kwargs):
     :return:
     """
 
+    logging_filename = kwargs.pop('logging_filename', None)
+    if logging_filename is not None and os.path.exists(logging_filename):
+        os.remove(logging_filename)
+    f = '{"Time": "%(asctime)-15s", "Level": "%(levelname)s", "AppName": "[%(name)s]", "Message": "%(message)s"}'
+    logging.basicConfig(format=f, filename=logging_filename)
+
     logger = logging.getLogger()
+    logger.name = kwargs.pop('app_name', 'youtube-crawler')
     logger.setLevel(kwargs.pop('log_level', logging.INFO))
     scrapper = Scrapper(
         loader=Loader(base_url=kwargs.pop('loader_base_url', 'https://www.youtube.com/channel/')),

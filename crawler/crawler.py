@@ -47,7 +47,7 @@ class YoutubeCrawler:
         )
         self.__scraper = scrapper
 
-    def scrappy_decorator(self, fn, *args, **kwargs):
+    def __retry(self, fn, *args, **kwargs):
         count = 0
         while count < self.__max_attempts:
             try:
@@ -103,6 +103,28 @@ class YoutubeCrawler:
         except Exception as e:
             logging.exception(e)
 
+    def __download_video(self, video_id):
+        try:
+            logging.info("scrappy video_id=%s" % video_id)
+            full_video_descr = self.__retry(self.__video_downloader.load, video_id)
+        except Exception as e:
+            self.__cache.update_failed_video(video_id)
+            msg = "problem with video downloading (video_id=%s)" % video_id
+            logging.warning(utils.CrawlerError(e=e, msg=msg))
+            return None, False
+        return full_video_descr, True
+
+    def __insert_video(self, video_id, channel_id, full_video_descr, descr):
+        data = self.__create_video(video_id, channel_id, full_video_descr, descr)
+        try:
+            self.__cache.insert_video_descr(data)
+        except Exception as e:
+            msg = "problem with video inserting into db (video_id=%s)" % video_id
+            logging.warning(utils.CrawlerError(e=e, msg=msg))
+            logging.error(e)
+            return False
+        return True
+
     def __download_videos(self, descrs):
         channel_id = descrs[Tab.HomePage][0]['owner_channel']['id']
         for descr in descrs[Tab.Videos]:
@@ -115,26 +137,16 @@ class YoutubeCrawler:
                 continue
 
             # Download video
-            try:
-                full_video_descr = self.scrappy_decorator(self.__video_downloader.load, video_id)
-            except Exception as e:
-                self.__cache.update_failed_video(video_id)
-                msg = "problem with video downloading (video_id=%s)" % video_id
-                logging.warning(utils.CrawlerError(e=e, msg=msg))
+            full_video_descr, is_downloaded = self.__download_video(video_id)
+            if not is_downloaded:
                 continue
 
-            data = self.__create_video(video_id, channel_id, full_video_descr, descr)
-            try:
-                self.__cache.insert_video_descr(data)
-            except Exception as e:
-                msg = "problem with video inserting into db (video_id=%s)" % video_id
-                logging.warning(utils.CrawlerError(e=e, msg=msg))
-                logging.error(e)
+            self.__insert_video(video_id, channel_id, full_video_descr, descr)
 
-    def __retry(self, channel_id):
-        logging.info("scrappy channelId=%s" % channel_id)
+    def __scrappy(self, channel_id):
         try:
-            full_descr = self.scrappy_decorator(self.__scraper.parse, channel_id)
+            logging.info("scrappy channelId=%s" % channel_id)
+            full_descr = self.__retry(self.__scraper.parse, channel_id)
             # Extract full_descr
             channel = self.__create_cur_channel(channel_id, full_descr, None)
             # Setting current channel into Cache. ChannelId
@@ -178,7 +190,7 @@ class YoutubeCrawler:
         channel_id = self.__cache.get_best_channel_id()
 
         while channel_id is not None:
-            full_descr, is_scrappy = self.__retry(channel_id)
+            full_descr, is_scrappy = self.__scrappy(channel_id)
             if not is_scrappy:
                 channel_id = self.__cache.get_best_channel_id()
                 continue

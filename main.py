@@ -1,6 +1,3 @@
-import logging
-import os
-
 from internal import arguments
 from internal import compose
 
@@ -12,12 +9,6 @@ from internal import compose
 def main():
     args = arguments.parse()
     crawler = compose.build_crawler(**args)
-    if args['logging_filename'] is not None and os.path.exists(args['logging_filename']):
-        os.remove(args['logging_filename'])
-    logging.basicConfig(
-        format='%(asctime)-15s %(levelname)s [%(name)s]: %(message)s',
-        filename=args['logging_filename']
-    )
 
     with open(args['base_channels']) as fd:
         channel_ids = list(filter(lambda x: len(x) > 0, map(compose.sep_url, fd.readlines())))

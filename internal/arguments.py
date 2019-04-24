@@ -10,6 +10,12 @@ def parse():
     args = argparse.ArgumentParser()
 
     args.add_argument(
+        '--app-name',
+        default=getenv('APP_NAME', 'youtube-crawler'),
+        type=str,
+        help='name of application in logging',
+    )
+    args.add_argument(
         '--base-channels',
         default=getenv('BASE_CHANNELS', 'data/base_channels.tsv'),
         type=str,
