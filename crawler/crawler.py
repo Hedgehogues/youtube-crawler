@@ -14,8 +14,6 @@ class YoutubeCrawler:
     def __init__(self, cache=None, ydl_loader=None, scraper=None, max_attempts=5):
         # TODO: переписать на StateMachine
         # TODO: выводить инфу о способе запуска
-        # TODO: сделать options для конфигурирования
-        # TODO: как быть, если в scrapper передан один логгер, а в качестве аргумента в YoutubeCrawler -- другой?
         self.__max_attempts = max_attempts
 
         self.__cache = cache
@@ -24,7 +22,8 @@ class YoutubeCrawler:
 
         self.__video_downloader = ydl_loader
         if self.__video_downloader is None:
-            self.__video_downloader = YoutubeDlLoader()
+            logger = logging.getLogger()
+            self.__video_downloader = YoutubeDlLoader(logger)
 
         self.__scraper = scraper
         if self.__scraper is None:
@@ -48,14 +47,13 @@ class YoutubeCrawler:
 
     def scrappy_decorator(self, fn, *args, **kwargs):
         count = 0
-        e = None
         while count < self.__max_attempts:
             try:
                 return fn(*args, **kwargs)
             except Exception as e:
                 logging.warning(utils.CrawlerError(e=e, msg="problem into scrapper. retry: %d" % count))
                 count += 1
-        raise e
+        raise utils.CrawlerError(msg="scrappy stopped")
 
     @staticmethod
     def __create_video(video_id, channel_id, full_descr, short_descr):
@@ -130,16 +128,6 @@ class YoutubeCrawler:
                 logging.warning(utils.CrawlerError(e=e, msg=msg))
                 logging.error(e)
 
-    def __set_base_videos(self, channel_ids):
-        msg = None
-        try:
-            ch_ids_str = ','.join(channel_ids)
-            msg = "set base channels was failed (channel_ids=%s)" % ch_ids_str
-            self.__cache.set_base_channels(channel_ids)
-        except Exception as e:
-            logging.exception(utils.CrawlerError(e=e, msg=msg))
-            # raise exception
-
     def __scrappy(self, channel_id):
         logging.info("scrappy channelId=%s" % channel_id)
         try:
@@ -182,8 +170,7 @@ class YoutubeCrawler:
             raise utils.CrawlerError("channel_ids is not list")
         logging.info("setting channel ids from arguments into cache")
 
-        self.__set_base_videos(channel_ids)
-        # Getting first channel from Cache
+        self.__cache.set_base_channels(channel_ids)
         channel_id = self.__cache.get_best_channel_id()
 
         while channel_id is not None:

@@ -4,6 +4,7 @@ import requests
 from copy import deepcopy
 from enum import Enum
 import youtube_dl
+from youtube_dl import extractor as ydl_extractor
 
 from crawler import utils
 from crawler.utils import ReloadTokenError
@@ -79,20 +80,17 @@ class Loader(BaseLoader):
     def load(self, channel_id, tab=Tab.HomePage, query_params=None):
         text = self._get_resp_text(self._base_url + channel_id + '/' + tab.value, params=query_params)
 
-        data_config = self.__extractor(text, self._data_config_prefix, "Data config serialize is failed", ';\n')
-        player_config = self.__extractor(text, self._player_config_prefix, "Player config serialize is failed", ');\n')
+        data_config = self.__extractor(text, self._data_config_prefix, ';\n')
+        player_config = self.__extractor(text, self._player_config_prefix, ');\n')
 
         return player_config, data_config
 
     @staticmethod
-    def __extractor(text, config, msg, pattern_found):
+    def __extractor(text, config, pattern_found):
         start_ind = text.find(config)+len(config)
         finish_ind = start_ind + text[start_ind:].find(pattern_found)
         config = text[start_ind:finish_ind]
-        try:
-            return json.loads(config)
-        except Exception as e:
-            raise utils.JsonSerializableError(msg, e)
+        return json.loads(config)
 
 
 class YDL_LOADER_FORMAT(Enum):
@@ -104,11 +102,19 @@ class YDL_LOADER_FORMAT(Enum):
 
 
 class YoutubeDlLoader:
+    @staticmethod
+    def __get_extractor():
+        extractor = None
+        for v in youtube_dl.gen_extractors():
+            if type(v) == ydl_extractor.YoutubeIE:
+                extractor = v
+        return extractor
+
     def __init__(self, logger, ydl_params=None, f=YDL_LOADER_FORMAT.MP3, base_url='https://www.youtube.com/watch'):
         self._base_url = base_url
 
         ydl = youtube_dl.YoutubeDL({'listsubtitles': True, 'logger': logger})
-        self._video_descr_extractor = ydl.get_info_extractor(youtube_dl.gen_extractors()[1125].ie_key())
+        self._video_descr_extractor = ydl.get_info_extractor(self.__get_extractor().ie_key())
 
         audio_ydl_params = ydl_params
         if audio_ydl_params is None:
