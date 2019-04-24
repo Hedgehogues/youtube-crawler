@@ -54,6 +54,12 @@ def parse():
         help='max attempts retry for requests',
     )
     args.add_argument(
+        '--retry-sleep',
+        default=getenv('RETRY_SLEEP', 10.),
+        type=int,
+        help='count seconds for sleep after all attempts retry',
+    )
+    args.add_argument(
         '--log-level',
         default=getenv('LOG_LEVEL', 'INFO'),
         choices=['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'],

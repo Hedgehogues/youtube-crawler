@@ -52,5 +52,6 @@ def build_crawler(**kwargs):
         ),
         scraper=scrapper,
         max_attempts=kwargs.pop("max_attempts", 5),
+        retry_sleep=kwargs.pop("retry_sleep", 10.)
     )
     return crwl

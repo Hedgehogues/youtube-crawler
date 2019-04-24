@@ -1,5 +1,6 @@
 import logging
 import json
+from time import sleep
 
 from crawler import parsers, utils
 from crawler.cache import DBSqlLiteCache
@@ -11,10 +12,11 @@ class YoutubeCrawler:
     # TODO: указано скачать не все видео, а только часть, то при повторной загрузке, будет выбран другой набор видео
     # TODO: Скрапер обкачивает k видео, а Crawler m из них может отбраковать, после чего не скачает новые k - m видео
 
-    def __init__(self, cache=None, ydl_loader=None, scraper=None, max_attempts=5):
+    def __init__(self, cache=None, ydl_loader=None, scraper=None, max_attempts=5, retry_sleep=10.):
         # TODO: переписать на StateMachine
         # TODO: выводить инфу о способе запуска
         self.__max_attempts = max_attempts
+        self.__retry_sleep = retry_sleep
 
         self.__cache = cache
         if self.__cache is None:
@@ -105,6 +107,7 @@ class YoutubeCrawler:
         channel_id = descrs[Tab.HomePage][0]['owner_channel']['id']
         for descr in descrs[Tab.Videos]:
             video_id = descr['id']
+            logging.info("downloading video_id=%s" % video_id)
 
             # Check in Cache video_id
             if self.__cache.check_exist_video(video_id):
@@ -128,7 +131,7 @@ class YoutubeCrawler:
                 logging.warning(utils.CrawlerError(e=e, msg=msg))
                 logging.error(e)
 
-    def __scrappy(self, channel_id):
+    def __retry(self, channel_id):
         logging.info("scrappy channelId=%s" % channel_id)
         try:
             full_descr = self.scrappy_decorator(self.__scraper.parse, channel_id)
@@ -139,6 +142,7 @@ class YoutubeCrawler:
         except Exception as e:
             self.__set_failed_channel(channel_id)
             logging.error(e)
+            sleep(self.__retry_sleep)
             return None, False
         return full_descr, True
 
@@ -174,7 +178,7 @@ class YoutubeCrawler:
         channel_id = self.__cache.get_best_channel_id()
 
         while channel_id is not None:
-            full_descr, is_scrappy = self.__scrappy(channel_id)
+            full_descr, is_scrappy = self.__retry(channel_id)
             if not is_scrappy:
                 channel_id = self.__cache.get_best_channel_id()
                 continue

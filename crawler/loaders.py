@@ -33,12 +33,9 @@ class BaseLoader:
         }
 
     def _get_resp_text(self, url, params=None, headers=None, method='GET'):
-        try:
-            params = {} if params is None else params
-            headers = self._headers if headers is None else headers
-            resp = requests.request(method, url, headers=headers, params=params)
-        except Exception as e:
-            raise utils.RequestError("Connection is failed", e)
+        params = {} if params is None else params
+        headers = self._headers if headers is None else headers
+        resp = requests.request(method, url, headers=headers, params=params)
         utils.check_resp(resp)
         return resp.text
 
@@ -61,10 +58,7 @@ class Reloader(BaseLoader):
         }
 
         config = self._get_resp_text(self._base_url, headers=headers, params=query_params)
-        try:
-            return json.loads(config)
-        except Exception as e:
-            raise utils.JsonSerializableError("Reload page config serialize is failed", e)
+        return json.loads(config)
 
 
 class Loader(BaseLoader):

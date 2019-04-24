@@ -93,7 +93,7 @@ class TestLoader(TestLoaderBaseClass):
         tab = Tab.HomePage
         loaders.requests.url = 'https://www.youtube.com/channel/%s/%s' % (channel_id, tab.value)
         self.assertRaises(
-            utils.JsonSerializableError,
+            Exception,
             loaders.Loader().load,
             channel_id=channel_id, tab=tab, query_params=self.params
         )
@@ -115,7 +115,7 @@ class TestLoader(TestLoaderBaseClass):
         tab = Tab.HomePage
         loaders.requests.url = 'https://www.youtube.com/channel/%s/%s' % (channel_id, tab.value)
         self.assertRaises(
-            utils.JsonSerializableError,
+            Exception,
             loaders.Loader().load,
             channel_id=channel_id, tab=tab, query_params=self.params
         )
@@ -153,7 +153,7 @@ class TestReloader(TestLoaderBaseClass):
             'itct': next_page_token['itct'],
         }
         loaders.requests.answ += '1'
-        self.assertRaises(utils.JsonSerializableError, loaders.Reloader().load, next_page_token)
+        self.assertRaises(Exception, loaders.Reloader().load, next_page_token)
 
     def test_load_2(self):
         """

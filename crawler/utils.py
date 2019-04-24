@@ -41,25 +41,6 @@ class ParserError(CrawlerError):
         super().__init__(msg, e)
 
 
-class JsonExtractionError(CrawlerError):
-    """Json with data not found in a page. This exception is generated of Scrapper
-
-    This exception may be thrown when one page of channel not contains
-    json with data or this json move to other place of page.
-    """
-    def __init__(self, msg, e=None):
-        super().__init__(msg, e)
-
-
-class JsonSerializableError(CrawlerError):
-    """Json with data not found in a page. This exception is generated of Scrapper
-
-    This exception may be thrown when one page of channel consist not valid json
-    """
-    def __init__(self, msg, e=None):
-        super().__init__(msg, e)
-
-
 class RequestError(CrawlerError):
     """Json with data not valid. This exception is generated of Scrapper
 
@@ -68,16 +49,6 @@ class RequestError(CrawlerError):
     """
     def __init__(self, msg, e=None):
         super().__init__(msg, e)
-
-
-class ScrapperError(CrawlerError):
-    """Scrapper is crashed. This exception is generated of Crawler
-
-    This exception denote crash of Scrapper. This exception is generated of Crawler
-    after raised exception of Scrapper. Returned answer from Scrapper is invalid.
-    """
-    def __init__(self, channel_id, e=None):
-        super().__init__("scrapper was failed. channel_id: %s" % channel_id, e)
 
 
 class CacheError(CrawlerError):
