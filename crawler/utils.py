@@ -5,23 +5,8 @@ class CrawlerError(Exception):
     This is base class of crawler exceptions
     """
 
-    def __init__(self, msg="", e=None):
+    def __init__(self, msg):
         self.msg = msg
-        self.e = e
-
-    def __add__(self, other):
-        self.msg += other
-
-    def __str__(self):
-        return self.__recursion(self)
-
-    def __recursion(self, e):
-        if isinstance(e, CrawlerError):
-            msg = self.__recursion(e.e)
-            return "%s" % self.msg if len(msg) == 0 else "%s:%s -> %s" % (type(e), e.msg, msg)
-        if e is None:
-            return ""
-        return "%s:%s" % (type(e), e.__str__())
 
 
 class ReloadTokenError(CrawlerError):

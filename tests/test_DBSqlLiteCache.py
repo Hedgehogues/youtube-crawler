@@ -807,5 +807,5 @@ class TestDBSqlLiteCacheSetFailedVideo(TestDBSqlLiteCache):
 
     def test(self):
         for test in self.tests:
-            self.apply_test(test, lambda obj, kwargs: obj.update_failed_video(**kwargs))
+            self.apply_test(test, lambda obj, kwargs: obj.insert_failed_video(**kwargs))
 

@@ -11,7 +11,7 @@ def parse():
 
     args.add_argument(
         '--app-name',
-        default=getenv('APP_NAME', 'youtube-crawler'),
+        default=getenv('APP_NAME', 'crawler'),
         type=str,
         help='name of application in logging',
     )
@@ -48,7 +48,7 @@ def parse():
     )
     args.add_argument(
         '--db-mod',
-        default=getenv('DB_MOD', DB_MOD.HARD),
+        default=getenv('DB_MOD', DB_MOD.OLD),
         choices=[DB_MOD.NEW, DB_MOD.HARD, DB_MOD.OLD],
         type=DB_MOD,
         help='path to sqlite database file',
@@ -61,9 +61,9 @@ def parse():
     )
     args.add_argument(
         '--retry-sleep',
-        default=getenv('RETRY_SLEEP', 10.),
+        default=getenv('RETRY_SLEEP', 3.),
         type=int,
-        help='count seconds for sleep after all attempts retry',
+        help='count seconds for sleep after each attempts retry',
     )
     args.add_argument(
         '--log-level',

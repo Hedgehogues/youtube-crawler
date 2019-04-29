@@ -152,11 +152,12 @@ class DBSqlLiteCache:
     where channel_id=?;
     '''
 
-    __sql_update_failed_video = '''
-    update videos
-    set
-      valid=?
-    where video_id=?;
+    __sql_insert_failed_video = '''
+    insert into videos (
+      valid,
+      video_id
+    )
+    values(FALSE, ?)
     '''
 
     __sql_update_downloaded_channel = '''
@@ -216,22 +217,17 @@ class DBSqlLiteCache:
                 output_channels.append(channel)
                 s.add(channel['channel_id'])
                 continue
-            msg = "this channel already exists into input channels"
-            warn = utils.CacheError(channel_id=channel['channel_id'], msg=msg)
-            logging.warning(warn)
+            logging.debug("channel_id=%s has already exist" % channel['channel_id'])
         return output_channels
 
-    def update_failed_video(self, video_id):
+    def insert_failed_video(self, video_id):
         """
-        This method set field valid as False. If there is not video_id, then exceptions will be generated
+        This method insert new video_id (without description) and set field valid as False
 
         :param video_id: failed video id (str)
-        :exception utils.CacheError: it is not found video id
         """
         conn = sqlite3.connect(self.db_path)
-        if not self.__check_exist_video_id(conn, video_id):
-            raise utils.CacheError(channel_id=video_id, msg="Not found video in DB")
-        conn.execute(self.__sql_update_failed_video, (False, video_id))
+        conn.execute(self.__sql_insert_failed_video, (video_id,))
         conn.commit()
         conn.close()
 
@@ -303,22 +299,31 @@ class DBSqlLiteCache:
             Another fields don't update
         """
 
+        logger = logging.getLogger()
         channels = []
         for channel_id in channels_id:
             channels.append({'channel_id': channel_id})
+        logger.debug("deduplicate channels")
         channels = self.__deduplicate_channels(channels)
+        logger.debug("connecting to sqlite...")
         conn = sqlite3.connect(self.db_path)
+        logger.debug("for loop channels")
         for channel in channels:
             channel_id = channel['channel_id']
+            logger.debug("init insert-query...")
             query = self.__sql_insert_base_channel
             args = create_args_set_insert_base_channels(channel_id)
             is_exist_channel_id = self.__check_exist_channel_id(conn, channel_id)
             if is_exist_channel_id and not replace:
                 continue
             if is_exist_channel_id and replace:
+                logger.debug("change insert-query to update-query...")
                 query = self.__sql_update_base_channel
                 args = create_args_set_update_base_channels(channel_id)
+
+            logger.debug("execute query...")
             conn.execute(query, args)
+        logger.debug("committing to sqlite...")
         conn.commit()
         conn.close()
 
